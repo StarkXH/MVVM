@@ -25,21 +25,31 @@ namespace SupervisorApp.ViewModels
             InitializeCommands();
         }
 
+        #region Events
+
+        /// <summary>
+        /// 监控寄存器集合变化事件
+        /// </summary>
+        public event EventHandler<MonitoredRegisterChangedEventArgs> MonitoredRegisterChanged;
+
+        /// <summary>
+        /// 触发监控寄存器变化事件
+        /// </summary>
+        /// <param name="register">变化的寄存器</param>
+        /// <param name="changeType">变化类型</param>
+        protected virtual void OnMonitoredRegisterChanged(RegisterItemViewModel register, MonitorChangeType changeType)
+        {
+            MonitoredRegisterChanged?.Invoke(this, new MonitoredRegisterChangedEventArgs(register, changeType));
+        }
+
+        #endregion
+
         #region Properties
 
         /// <summary>
         /// 被监控的寄存器集合
         /// </summary>
         public ObservableCollection<RegisterItemViewModel> MonitoredRegisters { get; }
-
-        /// <summary>
-        /// 窗口是否总在前
-        /// </summary>
-        public bool IsAlwaysOnTop
-        {
-            get => _isAlwaysOnTop;
-            set => Set(ref _isAlwaysOnTop, value);
-        }
 
         /// <summary>
         /// 窗口透明度
@@ -72,7 +82,6 @@ namespace SupervisorApp.ViewModels
         public RelayCommand ClearAllCommand { get; private set; }
         public RelayCommand IncreaseOpacityCommand { get; private set; }
         public RelayCommand DecreaseOpacityCommand { get; private set; }
-        public RelayCommand ToggleAlwaysOnTopCommand { get; private set; }
 
         private void InitializeCommands()
         {
@@ -90,9 +99,6 @@ namespace SupervisorApp.ViewModels
             DecreaseOpacityCommand = new RelayCommand(
                 () => WindowOpacity = Math.Max(0.1, WindowOpacity - 0.1),
                 () => WindowOpacity > 0.1);
-
-            ToggleAlwaysOnTopCommand = new RelayCommand(
-                () => IsAlwaysOnTop = !IsAlwaysOnTop);
         }
 
         private void UpdateCommandStates()
@@ -124,6 +130,9 @@ namespace SupervisorApp.ViewModels
             UpdateCommandStates();
             RaisePropertyChanged(nameof(MonitoredCount));
 
+            // 🟢 通知外部监听者寄存器已添加
+            OnMonitoredRegisterChanged(register, MonitorChangeType.Added);
+
             LogService.Instance.LogInfo($"📊 Added register {register.Name} to floating monitor");
         }
 
@@ -139,6 +148,10 @@ namespace SupervisorApp.ViewModels
             {
                 UpdateCommandStates();
                 RaisePropertyChanged(nameof(MonitoredCount));
+
+                // 🟢 通知外部监听者寄存器已移除
+                OnMonitoredRegisterChanged(register, MonitorChangeType.Removed);
+
                 LogService.Instance.LogInfo($"📊 Removed register {register.Name} from floating monitor");
             }
         }
@@ -148,12 +161,45 @@ namespace SupervisorApp.ViewModels
         /// </summary>
         public void ClearAllRegisters()
         {
+            var registersToRemove = MonitoredRegisters.ToList(); // 创建副本避免集合修改异常
+
             MonitoredRegisters.Clear();
             UpdateCommandStates();
             RaisePropertyChanged(nameof(MonitoredCount));
+
+            // 🟢 通知外部监听者所有寄存器已被清除
+            foreach (var register in registersToRemove)
+            {
+                OnMonitoredRegisterChanged(register, MonitorChangeType.Removed);
+            }
+
             LogService.Instance.LogInfo("📊 Cleared all monitored registers from floating monitor");
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// 监控变化类型
+    /// </summary>
+    public enum MonitorChangeType
+    {
+        Added,
+        Removed
+    }
+
+    /// <summary>
+    /// 监控寄存器变化事件参数
+    /// </summary>
+    public class MonitoredRegisterChangedEventArgs : EventArgs
+    {
+        public RegisterItemViewModel Register { get; }
+        public MonitorChangeType ChangeType { get; }
+
+        public MonitoredRegisterChangedEventArgs(RegisterItemViewModel register, MonitorChangeType changeType)
+        {
+            Register = register;
+            ChangeType = changeType;
+        }
     }
 }

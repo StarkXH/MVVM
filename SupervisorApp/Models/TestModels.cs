@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SupervisorApp.Test
+namespace SupervisorApp.Models
 {
     /// <summary>
     /// 测试结果

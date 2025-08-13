@@ -1,18 +1,16 @@
 ﻿using GalaSoft.MvvmLight.Command;
 using SupervisorApp.Core.Common;
 using SupervisorApp.Core.Devices;
-using SupervisorApp.Examples;
+using SupervisorApp.Helpers;
+using SupervisorApp.Models;
+using SupervisorApp.Views;
 using System;
 using System.Collections.ObjectModel;
+using System.IO;       // 用于路径操作
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Win32; // 用于文件对话框
-using System.IO;       // 用于路径操作
 using System.Windows;
-using SupervisorApp.Test;
-using SupervisorApp.Views;
-using System.ComponentModel;  // 用于MessageBox
 
 namespace SupervisorApp.ViewModels
 {
@@ -230,7 +228,7 @@ namespace SupervisorApp.ViewModels
             get => _currentTime;
             private set => Set(ref _currentTime, value);
         }
-        
+
         public bool IsFloatingMonitorVisible => _floatingMonitorView?.IsVisible ?? false;
 
         #endregion
@@ -293,11 +291,11 @@ namespace SupervisorApp.ViewModels
 
             AddToFloatingMonitorCommand = new RelayCommand<RegisterItemViewModel>(
                 AddToFloatingMonitor,
-                register => register != null && !IsRegisterInFloatingMonitor(register));
+                register => !IsRegisterInFloatingMonitor(register));
 
             RemoveFromFloatingMonitorCommand = new RelayCommand<RegisterItemViewModel>(
                 RemoveFromFloatingMonitor,
-                register => register != null && IsRegisterInFloatingMonitor(register));
+                register => IsRegisterInFloatingMonitor(register));
 
             ShowFloatingMonitorCommand = new RelayCommand(
                 ShowFloatingMonitor,
@@ -309,6 +307,7 @@ namespace SupervisorApp.ViewModels
 
             ToggleFloatingMonitorCommand = new RelayCommand(
                 ToggleFloatingMonitor);
+
         }
 
         private void UpdateAllCommandStates()
@@ -339,10 +338,17 @@ namespace SupervisorApp.ViewModels
         /// </summary>
         private void UpdateFloatingMonitorCommands()
         {
-            AddToFloatingMonitorCommand?.RaiseCanExecuteChanged();
-            RemoveFromFloatingMonitorCommand?.RaiseCanExecuteChanged();
-            ShowFloatingMonitorCommand?.RaiseCanExecuteChanged();
-            HideFloatingMonitorCommand?.RaiseCanExecuteChanged();
+            try
+            {
+                AddToFloatingMonitorCommand?.RaiseCanExecuteChanged();
+                RemoveFromFloatingMonitorCommand?.RaiseCanExecuteChanged();
+                ShowFloatingMonitorCommand?.RaiseCanExecuteChanged();
+                HideFloatingMonitorCommand?.RaiseCanExecuteChanged();
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Failed to update floating monitor commands: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -396,6 +402,9 @@ namespace SupervisorApp.ViewModels
         {
             if (_floatingMonitorView != null)
             {
+                // 🟢 取消订阅事件，避免内存泄漏
+                _floatingMonitorView.ViewModel.MonitoredRegisterChanged -= OnFloatingMonitorRegisterChanged;
+
                 _floatingMonitorView.Close();
                 _floatingMonitorView = null;
             }
@@ -484,7 +493,7 @@ namespace SupervisorApp.ViewModels
 
         private async Task LoadTestAsync()
         {
-            await DeviceTestHelper.RunComprehensiveTest(CurrentDevice);;
+            await DeviceTestHelper.RunComprehensiveTest(CurrentDevice);
         }
 
         private void UpdateDeviceInfo()
@@ -572,7 +581,7 @@ namespace SupervisorApp.ViewModels
                 }
                 // 🟢 先取消事件订阅
                 UnsubscribeFromDeviceEvents();
-                CurrentDevice?.Dispose();             
+                CurrentDevice?.Dispose();
                 IsConnected = false; // 🟢 手动设置为断开状态（因为 Dispose 后事件不会触发）
                 LogService.Instance.LogInfo("Device disconnected");
                 ClearError(); // Clear connection-related errors
@@ -936,9 +945,33 @@ namespace SupervisorApp.ViewModels
             if (_floatingMonitorView == null)
             {
                 _floatingMonitorView = new FloatingRegisterMonitorView();
+
+                // 🟢 订阅浮动监视器的变化事件
+                _floatingMonitorView.ViewModel.MonitoredRegisterChanged += OnFloatingMonitorRegisterChanged;
+
                 LogService.Instance.LogInfo("🪟 Floating monitor window created");
             }
             return _floatingMonitorView;
+        }
+
+        /// <summary>
+        /// 🟢 处理浮动监视器寄存器变化事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnFloatingMonitorRegisterChanged(object sender, MonitoredRegisterChangedEventArgs e)
+        {
+            try
+            {
+                // 当浮动监视器中的寄存器发生变化时，更新相关命令状态
+                UpdateFloatingMonitorCommands();
+
+                LogService.Instance.LogInfo($"🔄 Updated commands for register {e.Register.Name} ({e.ChangeType})");
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error handling floating monitor register change: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -1013,6 +1046,9 @@ namespace SupervisorApp.ViewModels
             }
         }
 
+        /// <summary>
+        /// 🟢 检查寄存器是否在浮动监视器中
+        /// </summary>
         public bool IsRegisterInFloatingMonitor(RegisterItemViewModel register)
         {
             return _floatingMonitorView?.ViewModel.MonitoredRegisters.Contains(register) ?? false;

@@ -159,17 +159,20 @@
     <Compile Include="Core\Devices\Extensions.cs" />
     <Compile Include="Core\Devices\IDevice.cs" />
     <Compile Include="Core\Common\ViewModelBase.cs" />
-    <Compile Include="Examples\TestDevice100.cs" />
+    <Compile Include="Factories\DeviceFactory.cs" />
+    <Compile Include="Helpers\SafeOperationExecutor.cs" />
+    <Compile Include="Models\TestDevice100.cs" />
     <Compile Include="Core\Messaging\IMessageBus.cs" />
     <Compile Include="Core\Messaging\MessageBus.cs" />
     <Compile Include="Core\Messaging\MessageHandlers.cs" />
     <Compile Include="Core\Navigation\NavigationService.cs" />
     <Compile Include="Examples\BitFieldExample.cs" />
-    <Compile Include="Examples\TestDevice100RegisterMaps.cs" />
+    <Compile Include="Models\TestDevice100RegisterMaps.cs" />
+    <Compile Include="Helpers\ScrollToEndBehavior.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Test\DeviceTestHelper.cs" />
+    <Compile Include="Helpers\DeviceTestHelper.cs" />
     <Compile Include="Models\TestModels.cs" />
     <Compile Include="UserControl\CnvLib.cs" />
     <Compile Include="UserControl\DigitalFormatTextBox.cs" />
@@ -203,6 +206,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Docs\LogTextBox自动滚动解决方案.md" />
+    <None Include="Docs\代码优化报告.md" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

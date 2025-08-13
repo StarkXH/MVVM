@@ -1,8 +1,4 @@
-﻿using SupervisorApp.Examples;
-using SupervisorApp.Test;
-using SupervisorApp.ViewModels;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using SupervisorApp.ViewModels;
 using System.Windows.Controls;
 
 namespace SupervisorApp.Views

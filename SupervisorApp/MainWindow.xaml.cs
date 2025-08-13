@@ -1,11 +1,8 @@
-﻿using GalaSoft.MvvmLight;
-using SupervisorApp.Core.Common;
-using SupervisorApp.Examples;
-using SupervisorApp.Test;
+﻿using SupervisorApp.Core.Common;
+using SupervisorApp.Factories;
+using SupervisorApp.Helpers;
 using SupervisorApp.ViewModels;
-using SupervisorApp.Views;
 using System;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace SupervisorApp
@@ -22,18 +19,6 @@ namespace SupervisorApp
             // Initialize log service
             LogService.Instance.LogInfo("Application started successfully");
 
-            // Auto-scroll log to bottom when new content is added
-            LogService.Instance.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(LogService.LogText))
-                {
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        LogTextBox.ScrollToEnd();
-                    }));
-                }
-            };
-
             // 自动加载测试设备
             Loaded += MainWindow_Loaded;
             Closing += MainWindow_Closing;
@@ -41,15 +26,10 @@ namespace SupervisorApp
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                // 自动加载测试设备到RegisterMapView
-                LoadTestDeviceToRegisterMap();
-            }
-            catch (Exception ex)
-            {
-                LogService.Instance.LogError($"Failed to auto-load test device: {ex.Message}");
-            }
+            // 🟢 使用SafeOperationExecutor简化异常处理
+            SafeOperationExecutor.ExecuteSafelyQuiet(
+                LoadTestDeviceToRegisterMap, 
+                "Auto-load test device");
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -61,32 +41,23 @@ namespace SupervisorApp
 
         private void LoadTestDeviceToRegisterMap()
         {
-            try
+            // 获取RegisterMapView的ViewModel
+            if (RegisterMapView?.DataContext is RegisterMapViewModel viewModel)
             {
-                // 获取RegisterMapView的ViewModel
-                if (RegisterMapView?.DataContext is RegisterMapViewModel viewModel)
+                // 🟢 检查是否已经有设备和是否已连接
+                if (viewModel.CurrentDevice == null || !viewModel.IsConnected)
                 {
-                    // 🟢 检查是否已经有设备和是否已连接
-                    if (viewModel.CurrentDevice == null || !viewModel.IsConnected)
+                    // 🟢 使用DeviceFactory创建设备
+                    if (viewModel.CurrentDevice == null)
                     {
-                        // 🟢 如果没有设备，创建设备但不连接
-                        if (viewModel.CurrentDevice == null)
-                        {
-                            var testDevice = new TestDevice100();
-                            viewModel.CurrentDevice = testDevice;
-
-                            LogService.Instance.LogInfo("Test device created and assigned to ViewModel");
-                        }
-                    }
-                    else
-                    {
-                        LogService.Instance.LogInfo("Device already loaded and connected, skipping initialization");
+                        viewModel.CurrentDevice = DeviceFactory.CreateDefaultTestDevice();
+                        LogService.Instance.LogInfo("Test device created and assigned to ViewModel");
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                LogService.Instance.LogError($"Failed to load test device: {ex.Message}");
+                else
+                {
+                    LogService.Instance.LogInfo("Device already loaded and connected, skipping initialization");
+                }
             }
         }
 
@@ -97,31 +68,33 @@ namespace SupervisorApp
 
         private void LoadTestDevice_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                LoadTestDeviceToRegisterMap();
-                MessageBox.Show("Test Device loaded successfully!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Test Device load failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            // 🟢 使用SafeOperationExecutor简化异常处理和消息显示
+            SafeOperationExecutor.ExecuteSafely(
+                LoadTestDeviceToRegisterMap,
+                "Load test device",
+                showSuccessMessage: true,
+                successMessage: "Test Device loaded successfully!");
         }
 
         private void ClearLog_Click(object sender, RoutedEventArgs e)
         {
-            LogService.Instance.Clear();
-            LogService.Instance.LogInfo("Log cleared by user");
+            SafeOperationExecutor.ExecuteSafelyQuiet(() =>
+            {
+                LogService.Instance.Clear();
+                LogService.Instance.LogInfo("Log cleared by user");
+            }, "Clear log");
         }
 
         private void CopyLog_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(LogService.Instance.LogText))
+            SafeOperationExecutor.ExecuteSafelyQuiet(() =>
             {
-                Clipboard.SetText(LogService.Instance.LogText);
-                LogService.Instance.LogInfo("Log content copied to clipboard");
-            }
+                if (!string.IsNullOrEmpty(LogService.Instance.LogText))
+                {
+                    Clipboard.SetText(LogService.Instance.LogText);
+                    LogService.Instance.LogInfo("Log content copied to clipboard");
+                }
+            }, "Copy log to clipboard");
         }
     }
-
 }

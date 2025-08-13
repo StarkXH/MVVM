@@ -1,14 +1,13 @@
 ﻿using SupervisorApp.Core.Common;
 using SupervisorApp.Core.Devices;
-using SupervisorApp.Examples;
-using SupervisorApp.Test;
+using SupervisorApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SupervisorApp.Test
+namespace SupervisorApp.Helpers
 {
     /// <summary>
     /// Device Test Helper - Provides various device testing scenarios

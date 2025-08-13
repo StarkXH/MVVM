@@ -84,7 +84,7 @@
         <!-- Toolbar -->
         <GroupBox Grid.Row="0" Header="Device Control" Margin="10,5">
             <StackPanel Orientation="Horizontal" Margin="5" Background="LightGray">
-                <Button Content="🔌 Connect Device" Command="{Binding ConnectCommand}" 
+                <Button Content="🔌 Connect Device" Command="{Binding ConnectCommand}"
                 Margin="5" Padding="10,5" ToolTip="Connect to device"/>
                 <Button Content="🔌 Disconnect Device" Command="{Binding DisconnectCommand}" 
                 Margin="5" Padding="10,5" ToolTip="Disconnect from device"/>

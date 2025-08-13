@@ -1,5 +1,5 @@
-﻿using SupervisorApp.Examples;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using SupervisorApp.Core.Devices;
 //┌─────────────────────────────────────┐
 //│ 硬件设备 / 模拟设备(TestDevice100)    │
 //│ Dictionary<uint, byte> _virtualRegisters │ ← **真正的数据源**
@@ -33,7 +33,7 @@ using System.Collections.Generic;
 5.	自动更新所有相关的位字段值
 **/
 
-namespace SupervisorApp.Core.Devices
+namespace SupervisorApp.Models
 {
     /// <summary>
     /// TestDevice100的寄存器映射定义

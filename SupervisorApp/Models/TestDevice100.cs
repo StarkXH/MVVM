@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SupervisorApp.Examples
+namespace SupervisorApp.Models
 {
     /// <summary>
     /// 100寄存器测试设备 - 完整实现IDevice接口

@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:SupervisorApp"
         xmlns:views="clr-namespace:SupervisorApp.Views"
         xmlns:common="clr-namespace:SupervisorApp.Core.Common"
+        xmlns:helpers="clr-namespace:SupervisorApp.Helpers"
         mc:Ignorable="d"
         Title="Supervisor App - Register Map Viewer" Height="1200" Width="1400">
     <Window.Resources>
@@ -61,7 +62,7 @@
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <TextBox x:Name="LogTextBox"
                          Text="{Binding Source={x:Static common:LogService.Instance}, Path=LogText, Mode=OneWay}"
-                         
+                         helpers:ScrollToEndBehavior.AutoScrollToEnd="True"
                          IsReadOnly="True"
                          FontFamily="Consolas"
                          FontSize="11"
