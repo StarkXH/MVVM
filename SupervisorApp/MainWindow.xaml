@@ -1,0 +1,108 @@
+﻿<Window x:Class="SupervisorApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SupervisorApp"
+        xmlns:views="clr-namespace:SupervisorApp.Views"
+        xmlns:common="clr-namespace:SupervisorApp.Core.Common"
+        mc:Ignorable="d"
+        Title="Supervisor App - Register Map Viewer" Height="1200" Width="1400">
+    <Window.Resources>
+        <Style TargetType="TabItem" BasedOn="{StaticResource tabItemStyle1}"/>
+        <Style TargetType="ScrollBar" BasedOn="{StaticResource ScrollBarStyle}"/>
+        <Style TargetType="ScrollViewer" BasedOn="{StaticResource ScrollViewerStyle}"/>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Menu bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File(_F)">
+                <MenuItem Header="New Project" />
+                <MenuItem Header="Open Project" />
+                <Separator/>
+                <MenuItem Header="Exit" Click="ExitMenuItem_Click"/>
+            </MenuItem>
+            <MenuItem Header="Device(_D)">
+                <MenuItem Header="Connect Device" />
+                <MenuItem Header="Disconnect Device" />
+                <MenuItem Header="Device List" />
+                <Separator/>
+                <MenuItem Header="Load Test Device" Click="LoadTestDevice_Click"/>
+            </MenuItem>
+            <MenuItem Header="Tools(_T)">
+                <MenuItem Header="Register Map" />
+                <MenuItem Header="Data Logger" />
+                <MenuItem Header="Protocol Analyzer" />
+            </MenuItem>
+            <MenuItem Header="Help(_H)">
+                <MenuItem Header="About" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Log Panel at bottom -->
+        <Grid DockPanel.Dock="Bottom" Height="300">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Log header -->
+            <DockPanel Grid.Row="0" Background="LightGray">
+                <TextBlock Text="📋 System Log" FontWeight="Bold" Margin="5" DockPanel.Dock="Left"/>
+                <Button Content="Clear" Width="60" Margin="5" DockPanel.Dock="Right" 
+                        Click="ClearLog_Click"/>
+                <Button Content="Copy" Width="60" Margin="5" DockPanel.Dock="Right" 
+                        Click="CopyLog_Click"/>
+            </DockPanel>
+
+            <!-- Log content -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <TextBox x:Name="LogTextBox"
+                         Text="{Binding Source={x:Static common:LogService.Instance}, Path=LogText, Mode=OneWay}"
+                         
+                         IsReadOnly="True"
+                         FontFamily="Consolas"
+                         FontSize="11"
+                         Background="Black"
+                         Foreground="LightGreen"
+                         Padding="5"
+                         TextWrapping="NoWrap"
+                         VerticalAlignment="Stretch"
+                         HorizontalAlignment="Stretch">
+                </TextBox>
+            </ScrollViewer>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Row="2" Height="3" HorizontalAlignment="Stretch" Background="Gray"/>
+        </Grid>
+
+        <!-- Main content area -->
+        <TabControl x:Name="MainTabControl">
+            <TabItem Header="📋 Register Map" Width="150">
+                <views:RegisterMapView x:Name="RegisterMapView"/>
+            </TabItem>
+
+            <TabItem Header="📊 Device Monitor" Width="150">
+                <Grid>
+                    <TextBlock Text="Device Monitor Interface - Under Development..." 
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center" 
+                               FontSize="24" 
+                               Foreground="Gray"/>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="📈 Data Logger" Width="150">
+                <Grid>
+                    <TextBlock Text="Data Logger Interface - Under Development..." 
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center" 
+                               FontSize="24" 
+                               Foreground="Gray"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

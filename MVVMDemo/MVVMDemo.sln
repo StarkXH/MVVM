@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MVVMLightLearning", "MVVMLightLearning.csproj", "{EE57DBC1-6B41-4A08-8438-0FB0C77569DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupervisorApp", "..\SupervisorApp\SupervisorApp.csproj", "{988A1016-06DD-4FE2-91C2-058A153C69AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE57DBC1-6B41-4A08-8438-0FB0C77569DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE57DBC1-6B41-4A08-8438-0FB0C77569DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE57DBC1-6B41-4A08-8438-0FB0C77569DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE57DBC1-6B41-4A08-8438-0FB0C77569DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{988A1016-06DD-4FE2-91C2-058A153C69AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{988A1016-06DD-4FE2-91C2-058A153C69AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{988A1016-06DD-4FE2-91C2-058A153C69AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{988A1016-06DD-4FE2-91C2-058A153C69AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3073AB48-8B44-4423-989B-8F85FCD6FFE6}
+	EndGlobalSection
+EndGlobal

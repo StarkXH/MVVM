@@ -1,0 +1,280 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:common="clr-namespace:ControlStyle">
+
+
+    <!--定义颜色画刷-->
+    <SolidColorBrush x:Key="ComboBoxItem.Static.Foreground" Color="#FF000000"/>
+    <SolidColorBrush x:Key="ComboBoxItem.Static.Background" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxItem.Selected.InList.Background" Color="#44000000"/>
+    <SolidColorBrush x:Key="ComboBoxItem.Highlighted.Background" Color="#005CB9"/>
+    <SolidColorBrush x:Key="ComboBoxItem.Disabled.Background" Color="#005CB9"/>
+    <SolidColorBrush x:Key="ComboBoxItem.Disabled.Foreground" Color="#22000000"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.Static.Background" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.Static.BorderBrush" Color="#44000000"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.MouseOver.BorderBrush" Color="#00B2E3"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.MouseOver.Fill" Color="#00B2E3"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.IsChecked.BorderBrush" Color="#FF000000"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.IsChecked.Background" Color="#22000000"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.IsChecked.Fill" Color="#FF707070"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.Disabled.BorderBrush" Color="#FF707070"/>
+    <SolidColorBrush x:Key="ComboBoxToggleButton.Disabled.Fill" Color="#FF707070"/>
+    <SolidColorBrush x:Key="ComboBoxTemplate.Static.Background" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxTemplate.Static.BorderBrush" Color="#FF000000"/>
+
+    <!--ComboBoxItem-->
+    <Style  x:Key="ComboBoxsItem" TargetType="{x:Type ComboBoxItem}">
+
+        <!-- 字体颜色 -->
+        <Setter Property="Foreground" Value="{StaticResource ComboBoxItem.Static.Foreground}"/>
+
+        <!-- 边框粗细 -->
+        <Setter Property="BorderThickness" Value="0"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                    <Border x:Name="templateRoot" Background="{StaticResource ComboBoxItem.Static.Background}" 
+                      BorderThickness="{TemplateBinding BorderThickness}" 
+                      Padding="2 1"
+                      SnapsToDevicePixels="true">
+
+                        <ContentPresenter x:Name="contentPresenter" 
+                                    IsHitTestVisible="false" Margin="{TemplateBinding Padding}" 
+                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+
+                        <!--选中-->
+                        <Trigger Property="IsSelected" Value="true">
+                            <Setter Property="Background" TargetName="templateRoot" Value="{StaticResource ComboBoxItem.Selected.InList.Background}"/>
+                        </Trigger>
+
+                        <!--高亮-->
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter Property="Background" TargetName="templateRoot" Value="{StaticResource ComboBoxItem.Highlighted.Background}"/>
+                            <Setter Property="TextBlock.Foreground" TargetName="contentPresenter" Value="White"/>
+                        </Trigger>
+
+                        <!--失能-->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" TargetName="templateRoot" Value="{StaticResource ComboBoxItem.Disabled.Background}"/>
+                            <Setter Property="TextBlock.Foreground" TargetName="contentPresenter" Value="{StaticResource ComboBoxItem.Disabled.Foreground}"/>
+                        </Trigger>
+
+
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+    </Style>
+
+    <!--ComboBoxToggleButton-->
+    <Style x:Key="ComboBoxToggleButton" TargetType="{x:Type ToggleButton}">
+
+        <!--覆盖默认样式-->
+        <Setter Property="OverridesDefaultStyle" Value="true"/>
+
+        <!--可以通过Tab键导航到这个控件-->
+        <Setter Property="IsTabStop" Value="false"/>
+
+        <!--可以获得焦点-->
+        <Setter Property="Focusable" Value="false"/>
+
+        <!--按钮的点击模式-->
+        <Setter Property="ClickMode" Value="Press"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                    <Border x:Name="templateRoot" 
+                      Background="{StaticResource ComboBoxToggleButton.Static.Background}"
+                      BorderThickness="{TemplateBinding BorderThickness}" 
+                      BorderBrush="{StaticResource ComboBoxToggleButton.Static.BorderBrush}" SnapsToDevicePixels="true">
+                        <Border x:Name="splitBorder" BorderThickness="1" 
+                          BorderBrush="Transparent" 
+                          HorizontalAlignment="Right" Margin="0"
+                          SnapsToDevicePixels="true"  Padding="2"
+                          Width="{StaticResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}">
+                            <Viewbox>
+                                <Path x:Name="arrow" Data="M512 682.666667l298.666667-298.666667H213.333333z" 
+                                  Stretch="Uniform"
+                                  Fill="#FF000000"
+                                  HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center"/>
+                            </Viewbox>
+                        </Border>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+
+                        <!-- 鼠标悬停 -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="BorderBrush" TargetName="templateRoot" Value="{StaticResource ComboBoxToggleButton.MouseOver.BorderBrush}"/>
+                            <Setter Property="Fill" TargetName="arrow" Value="{StaticResource ComboBoxToggleButton.MouseOver.Fill}"/>
+                        </Trigger>
+
+                        <!--点击-->
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="BorderBrush" TargetName="templateRoot" Value="{StaticResource ComboBoxToggleButton.IsChecked.BorderBrush}"/>
+                            <Setter Property="Background" TargetName="splitBorder" Value="{StaticResource ComboBoxToggleButton.IsChecked.Background}"/>
+                            <Setter Property="Fill" TargetName="arrow" Value="{StaticResource ComboBoxToggleButton.IsChecked.Fill}"/>
+                        </Trigger>
+
+                        <!--失能-->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="BorderBrush" TargetName="templateRoot" Value="{StaticResource ComboBoxToggleButton.Disabled.BorderBrush}"/>
+                            <Setter Property="Fill" TargetName="arrow" Value="{StaticResource ComboBoxToggleButton.Disabled.Fill}"/>
+                        </Trigger>
+
+
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--ComboBoxTemplate-->
+    <ControlTemplate x:Key="ComboBoxTemplate" TargetType="{x:Type ComboBox}">
+
+        <Grid x:Name="templateRoot" SnapsToDevicePixels="true">
+
+            <!--第一列宽度为*（占剩余空间），第二列最小宽度为系统参数中的垂直滚动条宽度，但初始宽度为0-->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition MinWidth="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}" Width="0"/>
+            </Grid.ColumnDefinitions>
+
+            <!--Popup 下拉部分 定义了一个弹出窗口，用于显示下拉列表-->
+            <Popup x:Name="PART_Popup" AllowsTransparency="true" Grid.ColumnSpan="2" IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Margin="1" Placement="Bottom" PopupAnimation="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}">
+                <Border x:Name="dropDownBorder"
+                          MinWidth="{Binding ActualWidth, ElementName=templateRoot}"
+                          MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                          Background="{StaticResource ComboBoxItem.Static.Background}" 
+                          BorderThickness="1 0 1 1"
+                          BorderBrush="{StaticResource ComboBoxTemplate.Static.BorderBrush}">
+
+                    <!--ScrollViewer滚动视图-->
+                    <ScrollViewer x:Name="DropDownScrollViewer">
+                        <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
+
+                            <!--Canvas和Rectangle：用于处理下拉列表的透明度-->
+                            <Canvas x:Name="canvas" HorizontalAlignment="Left" Height="0" VerticalAlignment="Top" Width="0">
+                                <Rectangle x:Name="opaqueRect" Fill="{Binding Background, ElementName=dropDownBorder}" Height="{Binding ActualHeight, ElementName=dropDownBorder}" Width="{Binding ActualWidth, ElementName=dropDownBorder}"/>
+                            </Canvas>
+
+                            <!--用于呈现组合框中的项目-->
+                            <ItemsPresenter x:Name="ItemsPresenter" 
+                                      KeyboardNavigation.DirectionalNavigation="Contained" 
+                                      SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Grid>
+
+                    </ScrollViewer>
+                </Border>
+            </Popup>
+
+            <!--切换按钮，用于打开和关闭下拉列表-->
+            <ToggleButton x:Name="toggleButton" Background="{TemplateBinding Background}" 
+                    BorderThickness="{TemplateBinding BorderThickness}" 
+                    BorderBrush="{TemplateBinding BorderBrush}" Grid.ColumnSpan="2" 
+                    IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                    Style="{StaticResource ComboBoxToggleButton}"/>
+
+            <!--呈现组合框当前选中的项目-->
+            <ContentPresenter x:Name="contentPresenter" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                        Content="{TemplateBinding SelectionBoxItem}" 
+                        ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
+                        ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" 
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                        IsHitTestVisible="false" Margin="{TemplateBinding Padding}" 
+                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </Grid>
+        <ControlTemplate.Triggers>
+
+            <!--没有项目，设置下拉边框的高度-->
+            <Trigger Property="HasItems" Value="false">
+                <Setter Property="Height" TargetName="dropDownBorder" Value="95"/>
+            </Trigger>
+
+            <!--禁用-->
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="BorderBrush" TargetName="dropDownBorder" Value="#FFF4F4F4"/>
+                <Setter Property="Background" TargetName="dropDownBorder" Value="#FFF4F4F4"/>
+                <Setter Property="TextBlock.Foreground" TargetName="contentPresenter" Value="#FF838383"/>
+            </Trigger>
+
+            <!--分组且不虚拟化，设置滚动视图的CanContentScroll属性-->
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsGrouping" Value="true"/>
+                    <Condition Property="VirtualizingStackPanel.IsVirtualizing" Value="false"/>
+                </MultiTrigger.Conditions>
+                <Setter Property="ScrollViewer.CanContentScroll" Value="false"/>
+            </MultiTrigger>
+
+            <!--滚动视图不能内容滚动，更新透明矩形的位置-->
+            <Trigger Property="ScrollViewer.CanContentScroll" SourceName="DropDownScrollViewer" Value="false">
+                <Setter Property="Canvas.Top" TargetName="opaqueRect" Value="{Binding VerticalOffset, ElementName=DropDownScrollViewer}"/>
+                <Setter Property="Canvas.Left" TargetName="opaqueRect" Value="{Binding HorizontalOffset, ElementName=DropDownScrollViewer}"/>
+            </Trigger>
+
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <!--ComboBoxs-->
+    <Style x:Key="ComboBoxsStyle" TargetType="{x:Type ComboBox}">
+
+        <!--文本颜色-->
+        <Setter Property="Foreground" Value="#FF000000"/>
+
+        <!--边框厚度-->
+        <Setter Property="BorderThickness" Value="1"/>
+
+        <!--水平滚动条的可见性-->
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+
+        <!--垂直滚动条的可见性-->
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+
+        <!--内边距-->
+        <Setter Property="Padding" Value="6,3,5,3"/>
+
+        <!--滚动视图的内容滚动-->
+        <Setter Property="ScrollViewer.CanContentScroll" Value="true"/>
+
+        <!--滚动视图的平移模式-->
+        <Setter Property="ScrollViewer.PanningMode" Value="Both"/>
+
+        <!--笔输入设备的快速轻扫手势-->
+        <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+
+        <!--工具提示的显示时长-->
+        <Setter Property="ToolTipService.ShowDuration" Value="5000"/>
+
+        <!--工具提示之间的显示延迟-->
+        <Setter Property="ToolTipService.BetweenShowDelay" Value="0"/>
+
+        <!--设置工具提示的初始显示延迟-->
+        <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
+
+        <!--设置控件模板-->
+        <Setter Property="Template" Value="{StaticResource ComboBoxTemplate}"/>
+
+        <!--条目模板-->
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ComboBoxsItem}"/>
+
+        <Style.Triggers>
+            <!--可编辑时-->
+            <Trigger Property="IsEditable" Value="true">
+                <Setter Property="IsTabStop" Value="false"/>
+                <Setter Property="Padding" Value="3"/>
+            </Trigger>
+        </Style.Triggers>
+
+    </Style>
+
+</ResourceDictionary>

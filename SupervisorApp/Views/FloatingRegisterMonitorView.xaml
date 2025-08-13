@@ -1,0 +1,129 @@
+﻿<Window x:Class="SupervisorApp.Views.FloatingRegisterMonitorView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:vm="clr-namespace:SupervisorApp.ViewModels"
+        xmlns:usr="clr-namespace:UsrCtl"
+        xmlns:cnv="clr-namespace:ComCls" 
+        xmlns:local="clr-namespace:SupervisorApp.Views"
+        xmlns:converters="clr-namespace:SupervisorApp.Converters"
+        mc:Ignorable="d" 
+        Title="{Binding WindowTitle}" 
+        Height="400" Width="600"
+        MinHeight="250" MinWidth="400"
+        WindowStyle="ToolWindow"
+        ResizeMode="CanResize"
+        Topmost="{Binding IsAlwaysOnTop}"
+        Opacity="{Binding WindowOpacity}"
+        ShowInTaskbar="True">
+    <d:Window.DataContext>
+        <vm:FloatingRegisterMonitorViewModel/>
+    </d:Window.DataContext>
+
+    <Window.Resources>
+        <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}"/>
+        <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}"/>
+
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:ByteToUlongConverter x:Key="ByteToUlongConverter"/>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 工具栏 -->
+        <Border Grid.Row="0" Background="LightBlue" Padding="5">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="📊 Floating Monitor" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
+                <TextBlock Text="{Binding MonitoredCount, StringFormat=({0} registers)}" 
+                   VerticalAlignment="Center" Margin="5,0" Foreground="DarkBlue"/>
+
+                <Separator Margin="10,0"/>
+
+                <Button Content="🗑️ Clear All" Command="{Binding ClearAllCommand}" 
+                Margin="5,0" Padding="8,2" ToolTip="Clear all monitored registers"/>
+
+                <Separator Margin="10,0"/>
+
+                <TextBlock Text="Opacity:" VerticalAlignment="Center" Margin="5,0"/>
+                <Button Content="➕" Command="{Binding IncreaseOpacityCommand}" 
+                Margin="2,0" Padding="5,2" ToolTip="Increase opacity"/>
+                <Button Content="➖" Command="{Binding DecreaseOpacityCommand}" 
+                Margin="2,0" Padding="5,2" ToolTip="Decrease opacity"/>
+
+                <Separator Margin="10,0"/>
+
+                <CheckBox Content="📌 Always on Top" IsChecked="{Binding IsAlwaysOnTop}" 
+                  VerticalAlignment="Center" Margin="5,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- 寄存器监控列表 -->
+        <DataGrid Grid.Row="1" 
+                  ItemsSource="{Binding MonitoredRegisters}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  GridLinesVisibility="All"
+                  HeadersVisibility="All"
+                  AlternatingRowBackground="#F0F8FF"
+                  Margin="5">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat=0x{0:X4}}" 
+                            Width="80" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" 
+                            Width="120" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding Type}" 
+                            Width="80" IsReadOnly="True"/>
+
+                <!-- 当前值 -->
+                <DataGridTemplateColumn Header="Value (Hex)" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <usr:DigitalFormatTextBox 
+                                 Value="{Binding CurrentValue, Converter={StaticResource ByteToUlongConverter}, Mode=OneWay}"
+                                 DigitalFormat="Hex"
+                                 ByteLength="1"
+                                 ReadOnly="True"
+                                 Width="80"
+                                 Height="22"
+                                 HorizontalAlignment="Center"
+                                 Background="LightYellow"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- 操作列 -->
+                <DataGridTemplateColumn Header="Action" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="❌" 
+                            Command="{Binding DataContext.RemoveRegisterCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            Width="30" Height="25"
+                            ToolTip="Remove from monitor"
+                            Background="LightCoral"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- 状态栏 -->
+        <Border Grid.Row="2" Background="LightGray" Padding="5">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding MonitoredCount, StringFormat=Monitoring {0} registers}" 
+                   Margin="5,0"/>
+                <Separator Margin="10,0"/>
+                <TextBlock Text="{Binding WindowOpacity, StringFormat=Opacity: {0:P0}}" 
+                   Margin="5,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

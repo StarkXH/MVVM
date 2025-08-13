@@ -1,0 +1,295 @@
+﻿<UserControl x:Class="SupervisorApp.Views.RegisterMapView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:SupervisorApp.ViewModels"
+             xmlns:usr="clr-namespace:UsrCtl"
+             xmlns:cnv="clr-namespace:ComCls" 
+             xmlns:local="clr-namespace:SupervisorApp.Views"
+             xmlns:converters="clr-namespace:SupervisorApp.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1000">
+
+    <d:UserControl.DataContext>
+        <vm:RegisterMapViewModel />
+    </d:UserControl.DataContext>
+
+    <UserControl.Resources>
+        <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}"/>
+        <Style TargetType="ScrollBar" BasedOn="{StaticResource ScrollBarStyle}"/>
+        <Style TargetType="ScrollViewer" BasedOn="{StaticResource ScrollViewerStyle}"/>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource ComboBoxsStyle}"/>
+
+        <!-- Converter definitions -->
+        <converters:UintToBooleanConverter x:Key="UintToBooleanConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:BitFieldMappingsConverter x:Key="BitFieldMappingsConverter"/>
+        <converters:ByteToUlongConverter x:Key="ByteToUlongConverter"/>
+        
+        <!-- Converter: Map bit field values to ComboBox options -->
+        <DataTemplate x:Key="BitFieldValueMappingTemplate">
+            <ComboBox x:Name="BitFieldComboBox" 
+                      SelectedValue="{Binding CurrentValue, UpdateSourceTrigger=PropertyChanged}"
+                      DisplayMemberPath="Value"
+                      SelectedValuePath="Key"
+                      MinWidth="100"
+                      IsEnabled="{Binding IsEnabled}">
+                <ComboBox.ItemsSource>
+                    <MultiBinding Converter="{StaticResource BitFieldMappingsConverter}">
+                        <Binding Path="BitField.ValueMappings"/>
+                        <Binding Path="MaxValue"/>
+                    </MultiBinding>
+                </ComboBox.ItemsSource>
+            </ComboBox>
+        </DataTemplate>
+
+        <!-- Single bit field uses CheckBox -->
+        <DataTemplate x:Key="SingleBitFieldTemplate">
+            <CheckBox IsChecked="{Binding CurrentValue, Converter={StaticResource UintToBooleanConverter}, UpdateSourceTrigger=PropertyChanged}"
+                      Content="{Binding Name}"
+                      HorizontalAlignment="Center"
+                      IsEnabled="{Binding IsEnabled}"/>
+        </DataTemplate>
+
+        <!-- Multi-bit field uses DigitalFormatTextBox -->
+        <DataTemplate x:Key="MultiBitFieldTemplate">
+            <usr:DigitalFormatTextBox Value="{Binding CurrentValue, Converter={StaticResource ByteToUlongConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                      MinValue="0"
+                                      MaxValue="{Binding MaxValue}"
+                                      DigitalFormat="Dec"
+                                      DecimalFormat="U32"
+                                      ReadOnly="{Binding IsEnabled, Converter={StaticResource InverseBooleanConverter}}"
+                                      Width="80"
+                                      HorizontalAlignment="Center"/>
+        </DataTemplate>
+
+        <!-- Bit field control selector -->
+        <local:BitFieldControlTemplateSelector x:Key="BitFieldControlTemplateSelector"
+                                               SingleBitTemplate="{StaticResource SingleBitFieldTemplate}"
+                                               MultiBitTemplate="{StaticResource MultiBitFieldTemplate}"
+                                               ValueMappingTemplate="{StaticResource BitFieldValueMappingTemplate}"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" MinHeight="300"/>
+            <RowDefinition Height="200"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <GroupBox Grid.Row="0" Header="Device Control" Margin="10,5">
+            <StackPanel Orientation="Horizontal" Margin="5" Background="LightGray">
+                <Button Content="🔌 Connect Device" Command="{Binding ConnectCommand}" 
+                Margin="5" Padding="10,5" ToolTip="Connect to device"/>
+                <Button Content="🔌 Disconnect Device" Command="{Binding DisconnectCommand}" 
+                Margin="5" Padding="10,5" ToolTip="Disconnect from device"/>
+                <Button Content="🔄 Refresh All" Command="{Binding RefreshAllCommand}" 
+                Margin="5" Padding="10,5" ToolTip="Refresh all register values"/>
+                <Button Content="📋 Load Test" Command="{Binding LoadTestCommand}" 
+                Margin="5" Padding="10,5" ToolTip="Load test device"/>
+                <Separator Margin="10,0"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- 🟢 Excel 导入导出工具栏 -->
+        <GroupBox Grid.Row="1" Header="BitField Excel Operations" Margin="10,5">
+            <StackPanel Orientation="Horizontal" Margin="5" Background="LightCyan">
+                <Button Content="📤 Export to Excel" Command="{Binding ExportToExcelCommand}" 
+                Margin="5" Padding="12,6" ToolTip="Export current BitField values to Excel file"
+                Background="LightGreen" FontWeight="Bold"/>
+                <Button Content="📥 Import from Excel" Command="{Binding ImportFromExcelCommand}" 
+                Margin="5" Padding="12,6" ToolTip="Import BitField configuration from Excel file"
+                Background="LightBlue" FontWeight="Bold"/>
+                <Separator Margin="10,0"/>
+                <TextBlock Text="Excel Operations:" VerticalAlignment="Center" Margin="5"/>
+                <TextBlock Text="{Binding ExcelOperationStatus}" VerticalAlignment="Center" 
+                   Margin="5" FontWeight="Bold" Foreground="DarkBlue"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Device Info -->
+        <GroupBox Grid.Row="2" Header="Device Info" Margin="10,5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <TextBlock Text="Device ID:" Margin="5"/>
+                    <TextBlock Text="{Binding DeviceId}" Margin="5" FontWeight="Bold"/>
+                    <TextBlock Text="Device Name:" Margin="15,5,5,5"/>
+                    <TextBlock Text="{Binding DeviceName}" Margin="5" FontWeight="Bold"/>
+                    <TextBlock Text="Register Count:" Margin="15,5,5,5"/>
+                    <TextBlock Text="{Binding RegisterCount}" Margin="5" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5" Background="LightYellow">
+                    <TextBlock Text="🎭" Margin="5" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding SimulationStatus}" Margin="5" VerticalAlignment="Center" 
+                               FontWeight="Bold" Foreground="DarkGreen"/>
+
+                    <!-- 🟢 独立的模拟控制按钮 -->
+                    <Button Content="▶ Start" Command="{Binding StartSimulationCommand}" 
+                            Margin="10,2,2,2" Width="100" Padding="8,3" FontSize="11" Background="LightGreen"
+                            ToolTip="Start device simulation"/>
+                    <Button Content="⏸ Stop" Command="{Binding StopSimulationCommand}" 
+                            Margin="2" Width="100" Padding="8,3" FontSize="11" Background="LightCoral"
+                            ToolTip="Stop device simulation"/>
+                    <!-- 🟢 模拟间隔设置 -->
+                    <TextBlock Text="Interval:" VerticalAlignment="Center" Margin="10,5,5,5"/>
+                    <ComboBox x:Name="SimulationIntervalComboBox"
+                              Margin="5" Width="80" VerticalAlignment="Center"
+                              ItemsSource="{Binding SimulationIntervalOptions}"
+                              SelectedValue="{Binding SimulationInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              IsEnabled="{Binding IsConnected}"
+                              DisplayMemberPath="Display"
+                              SelectedValuePath="Value"
+                              ToolTip="Set device simulation interval">
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+            
+        </GroupBox>
+
+        <!-- Register List -->
+        <GroupBox Grid.Row="3" Header="RegisterMaps" Margin="10,5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Floating Monitor Toolbar -->
+                <Border Grid.Row="0" Background="LightSteelBlue" Padding="5">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📊 Floating Monitor:" VerticalAlignment="Center" Margin="5,0" FontWeight="Bold"/>
+                        <Button Content="🪟 Show Monitor" Command="{Binding ShowFloatingMonitorCommand}" 
+                                Margin="5,0" Padding="8,3" ToolTip="Show floating register monitor window"/>
+                        <Button Content="🫥 Hide Monitor" Command="{Binding HideFloatingMonitorCommand}" 
+                                Margin="5,0" Padding="8,3" ToolTip="Hide floating register monitor window"/>
+                        <Button Content="🔄 Toggle Monitor" Command="{Binding ToggleFloatingMonitorCommand}" 
+                                Margin="5,0" Padding="8,3" ToolTip="Toggle floating monitor visibility"/>
+                        <TextBlock Text="{Binding IsFloatingMonitorVisible, StringFormat=Status: {0}}" 
+                                   VerticalAlignment="Center" Margin="10,0" Foreground="DarkBlue"/>
+                    </StackPanel>
+                </Border>
+
+                <DataGrid Grid.Row="1" 
+                          ItemsSource="{Binding RegisterItems}"
+                          SelectedItem="{Binding SelectedRegister}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          GridLinesVisibility="All"
+                          HeadersVisibility="All">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat=0x{0:X4}}" Width="80" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="100" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Access" Binding="{Binding Access}" Width="100" IsReadOnly="True"/>
+
+                        <!-- Use DigitalFormatTextBox to display hexadecimal values -->
+                        <DataGridTemplateColumn Header="Value" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <usr:DigitalFormatTextBox Value="{Binding CurrentValue, Converter={StaticResource ByteToUlongConverter}, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                              MinValue="0"
+                                              MaxValue="255"
+                                              DigitalFormat="Hex"
+                                              ByteLength="1"
+                                              ReadOnly="{Binding CanWrite, Converter={StaticResource InverseBooleanConverter}}"
+                                              Width="80"
+                                              HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="Command" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Read" Command="{Binding ReadCommand}" IsEnabled="{Binding CanRead}" 
+                                                Width="35" Margin="1" Padding="3,1" FontSize="9"/>
+                                        <Button Content="Write" Command="{Binding WriteCommand}" IsEnabled="{Binding CanWrite}" 
+                                                Width="35" Margin="1" Padding="3,1" FontSize="9"/>
+                                        <Button Content="📊+" 
+                                                Command="{Binding DataContext.AddToFloatingMonitorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Width="30" Margin="1" Padding="3,1" FontSize="9"
+                                                ToolTip="Add to floating monitor"
+                                                Background="LightGreen"/>
+                                        <Button Content="📊-" 
+                                                Command="{Binding DataContext.RemoveFromFloatingMonitorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Width="30" Margin="1" Padding="3,1" FontSize="9"
+                                                ToolTip="Remove from floating monitor"
+                                                Background="LightCoral"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+            
+        </GroupBox>
+
+        <!-- Bit Field Details -->
+        <GroupBox Grid.Row="4" Header="Selected Register BitFields" Margin="10,5">
+            <DataGrid ItemsSource="{Binding SelectedRegister.BitFieldItems}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      GridLinesVisibility="All"
+                      HeadersVisibility="All"
+                      AlternatingRowBackground="#FFF8DC">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="BitField"  Binding="{Binding Name}" Width="120"/>
+                    <DataGridTextColumn Header="Bit Range" Binding="{Binding BitRange}" Width="100"/>
+                    <DataGridTextColumn Header="Bit Width" Binding="{Binding BitWidth}" Width="100"/>
+                    <DataGridTextColumn Header="Value" Binding="{Binding CurrentValue}" Width="80"/>
+
+                    <!-- Bit field control column - select different controls based on bit width -->
+                    <DataGridTemplateColumn Header="Control" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding}" 
+                                                  ContentTemplateSelector="{StaticResource BitFieldControlTemplateSelector}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="5">
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Status: "/>
+                    <TextBlock Text="{Binding DeviceStatus}" FontWeight="Bold" Foreground="Blue"/>
+                </StackPanel>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Selected: "/>
+                    <TextBlock Text="{Binding SelectedRegister.Name}" FontWeight="Bold" Foreground="Blue"/>
+                    <TextBlock Text=" ("/>
+                    <TextBlock Text="{Binding SelectedRegister.BitFieldItems.Count}"/>
+                    <TextBlock Text=" BitFields)"/>
+                </StackPanel>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock Text="{Binding Time, StringFormat=📅 {0:yyyy-MM-dd HH:mm:ss}}"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</UserControl>
