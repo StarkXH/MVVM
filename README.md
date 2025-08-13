@@ -1,1 +1,5 @@
 # Demo
+学习MVVM过程中的一些Demo
+- MVVM文件夹中是之前在GitHub上收集的关于MVVM架构的一些现成的Examples，其中有关Prism的Example详细介绍并实现了可能会用到的各种方法和设计思路
+- MVVMDemo中是自己设计的基于MVVMLight的一个计算器程序，结构比较简单，实现了MVVM架构中的基础功能
+- SupervisorApp是基于自身工作环境，利用Copilot学习设计的上位机程序，功能相对比较复杂，仍在开发过程中。
