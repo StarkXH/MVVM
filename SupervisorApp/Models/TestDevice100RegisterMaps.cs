@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using SupervisorApp.Core.Devices;
+﻿using SupervisorApp.Core.Devices;
+using System.Collections.Generic;
+using System.Linq;
 //┌─────────────────────────────────────┐
 //│ 硬件设备 / 模拟设备(TestDevice100)    │
 //│ Dictionary<uint, byte> _virtualRegisters │ ← **真正的数据源**
@@ -47,22 +48,11 @@ namespace SupervisorApp.Models
         {
             var registerMaps = new List<RegisterMap>();
 
-            // GPIO相关寄存器
-            registerMaps.AddRange(CreateGPIORegisters());
-
-            // 传感器相关寄存器  
-            registerMaps.AddRange(CreateSensorRegisters());
-
-            // 电机控制相关寄存器
-            registerMaps.AddRange(CreateMotorRegisters());
-
-            // 系统状态相关寄存器
-            registerMaps.AddRange(CreateSystemRegisters());
-
-            // 计数器和测试寄存器
-            registerMaps.AddRange(CreateTestRegisters());
-
-            return registerMaps;
+            return CreateGPIORegisters()
+                .Concat(CreateSensorRegisters())
+                .Concat(CreateMotorRegisters())
+                .Concat(CreateSystemRegisters())
+                .Concat(CreateTestRegisters());
         }
 
         #region GPIO寄存器组

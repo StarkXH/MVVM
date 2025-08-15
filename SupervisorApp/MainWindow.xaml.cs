@@ -26,17 +26,47 @@ namespace SupervisorApp
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            // 🟢 使用SafeOperationExecutor简化异常处理
-            SafeOperationExecutor.ExecuteSafelyQuiet(
-                LoadTestDeviceToRegisterMap, 
-                "Auto-load test device");
+            // 🟢 不再自动加载测试设备，因为设备已经在App启动时选择
+            // 如果ViewModel中还没有设备，说明设备选择流程有问题
+            if (RegisterMapView?.DataContext is RegisterMapViewModel viewModel)
+            {
+                if (viewModel.CurrentDevice == null)
+                {
+                    LogService.Instance.LogWarning("⚠️ No device assigned to ViewModel, loading default test device");
+                    SafeOperationExecutor.ExecuteSafelyQuiet(
+                        LoadTestDeviceToRegisterMap, 
+                        "Fallback: Auto-load test device");
+                }
+                else
+                {
+                    LogService.Instance.LogInfo($"✅ Device already assigned: {viewModel.CurrentDevice.DeviceName}");
+                }
+            }
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // 在关闭窗口时清理资源
-            LogService.Instance.LogInfo("Application is closing, cleaning up resources...");
-            Environment.Exit(0);
+            LogService.Instance.LogInfo("🚪 MainWindow is closing, cleaning up resources...");
+            
+            try
+            {
+                // 清理RegisterMapView的ViewModel资源
+                if (RegisterMapView?.DataContext is RegisterMapViewModel viewModel)
+                {
+                    LogService.Instance.LogInfo("🧹 Cleaning up RegisterMapViewModel...");
+                    viewModel.Cleanup();
+                }
+                
+                LogService.Instance.LogInfo("✅ Resource cleanup completed");
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error during resource cleanup: {ex.Message}");
+            }
+            
+            // 🔧 移除Environment.Exit(0)，让WPF正常处理窗口关闭
+            // Environment.Exit(0); // 这会强制终止进程，不建议使用
         }
 
         private void LoadTestDeviceToRegisterMap()

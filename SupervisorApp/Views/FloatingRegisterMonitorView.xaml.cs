@@ -1,4 +1,5 @@
 ﻿using SupervisorApp.ViewModels;
+using System;
 using System.ComponentModel;
 using System.Windows;
 
@@ -10,6 +11,7 @@ namespace SupervisorApp.Views
     public partial class FloatingRegisterMonitorView : Window
     {
         public FloatingRegisterMonitorViewModel ViewModel { get; }
+        public EventHandler VisibilityChanged;
 
         public FloatingRegisterMonitorView()
         {
@@ -20,6 +22,7 @@ namespace SupervisorApp.Views
 
             // 处理窗口关闭事件
             Closing += OnWindowClosing;
+            Closing += OnWindowIsVisbleChanged;
 
             // 设置窗口初始位置
             SetInitialPosition();
@@ -38,6 +41,7 @@ namespace SupervisorApp.Views
             // 隐藏窗口而不是关闭，这样可以保持监控状态
             e.Cancel = true;
             Hide();
+            this.Visibility = Visibility.Hidden;
         }
 
         /// <summary>
@@ -50,19 +54,9 @@ namespace SupervisorApp.Views
             Focus();
         }
 
-        /// <summary>
-        /// 切换窗口显示/隐藏状态
-        /// </summary>
-        public void ToggleVisibility()
+        private void OnWindowIsVisbleChanged(object sender, EventArgs e)
         {
-            if (IsVisible)
-            {
-                Hide();
-            }
-            else
-            {
-                ShowAndActivate();
-            }
+            VisibilityChanged?.Invoke(this, e);
         }
     }
 }

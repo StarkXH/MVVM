@@ -10,5 +10,6 @@
         <ResourceDictionary Source="/ControlStyle/Themes/TextBoxs.xaml"/>
         <ResourceDictionary Source="/ControlStyle/Themes/TreeViews.xaml"/>
         <ResourceDictionary Source="/ControlStyle/Themes/ProgressBar.xaml"/>
+        <ResourceDictionary Source="/ControlStyle/Themes/DataGrids.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

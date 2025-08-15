@@ -161,6 +161,7 @@
     <Compile Include="Core\Common\ViewModelBase.cs" />
     <Compile Include="Factories\DeviceFactory.cs" />
     <Compile Include="Helpers\SafeOperationExecutor.cs" />
+    <Compile Include="Models\DeviceSelectionItem.cs" />
     <Compile Include="Models\TestDevice100.cs" />
     <Compile Include="Core\Messaging\IMessageBus.cs" />
     <Compile Include="Core\Messaging\MessageBus.cs" />
@@ -174,13 +175,18 @@
     </Compile>
     <Compile Include="Helpers\DeviceTestHelper.cs" />
     <Compile Include="Models\TestModels.cs" />
+    <Compile Include="Models\VA79ARegisterMaps.cs" />
     <Compile Include="UserControl\CnvLib.cs" />
     <Compile Include="UserControl\DigitalFormatTextBox.cs" />
     <Compile Include="ViewModels\BitFieldItemViewModel.cs" />
+    <Compile Include="ViewModels\DeviceSelectionViewModel.cs" />
     <Compile Include="ViewModels\FloatingRegisterMonitorViewModel.cs" />
     <Compile Include="ViewModels\RegisterItemViewModel.cs" />
     <Compile Include="ViewModels\RegisterMapViewModel.cs" />
     <Compile Include="Views\BitFieldControlTemplateSelector.cs" />
+    <Compile Include="Views\DeviceSelectionWindow.xaml.cs">
+      <DependentUpon>DeviceSelectionWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\FloatingRegisterMonitorView.xaml.cs">
       <DependentUpon>FloatingRegisterMonitorView.xaml</DependentUpon>
     </Compile>
@@ -235,6 +241,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="ControlStyle\Themes\DataGrids.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ControlStyle\Themes\ProgressBar.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -265,6 +275,9 @@
     </Page>
     <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DeviceSelectionWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\FloatingRegisterMonitorView.xaml">

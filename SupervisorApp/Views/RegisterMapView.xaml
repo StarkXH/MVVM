@@ -11,9 +11,9 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1000">
 
-    <d:UserControl.DataContext>
+    <!--<d:UserControl.DataContext>
         <vm:RegisterMapViewModel />
-    </d:UserControl.DataContext>
+    </d:UserControl.DataContext>-->
 
     <UserControl.Resources>
         <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}"/>
@@ -60,7 +60,7 @@
                                       DigitalFormat="Dec"
                                       DecimalFormat="U32"
                                       ReadOnly="{Binding IsEnabled, Converter={StaticResource InverseBooleanConverter}}"
-                                      Width="80"
+                                      Width="80" Height="20"
                                       HorizontalAlignment="Center"/>
         </DataTemplate>
 
@@ -101,10 +101,10 @@
             <StackPanel Orientation="Horizontal" Margin="5" Background="LightCyan">
                 <Button Content="📤 Export to Excel" Command="{Binding ExportToExcelCommand}" 
                 Margin="5" Padding="12,6" ToolTip="Export current BitField values to Excel file"
-                Background="LightGreen" FontWeight="Bold"/>
+                FontWeight="Bold"/>
                 <Button Content="📥 Import from Excel" Command="{Binding ImportFromExcelCommand}" 
                 Margin="5" Padding="12,6" ToolTip="Import BitField configuration from Excel file"
-                Background="LightBlue" FontWeight="Bold"/>
+                FontWeight="Bold"/>
                 <Separator Margin="10,0"/>
                 <TextBlock Text="Excel Operations:" VerticalAlignment="Center" Margin="5"/>
                 <TextBlock Text="{Binding ExcelOperationStatus}" VerticalAlignment="Center" 
@@ -167,25 +167,28 @@
                 <Border Grid.Row="0" Background="LightSteelBlue" Padding="5">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📊 Floating Monitor:" VerticalAlignment="Center" Margin="5,0" FontWeight="Bold"/>
-                        <Button Content="🪟 Show Monitor" Command="{Binding ShowFloatingMonitorCommand}" 
-                                Margin="5,0" Padding="8,3" ToolTip="Show floating register monitor window"/>
-                        <Button Content="🫥 Hide Monitor" Command="{Binding HideFloatingMonitorCommand}" 
-                                Margin="5,0" Padding="8,3" ToolTip="Hide floating register monitor window"/>
-                        <Button Content="🔄 Toggle Monitor" Command="{Binding ToggleFloatingMonitorCommand}" 
-                                Margin="5,0" Padding="8,3" ToolTip="Toggle floating monitor visibility"/>
-                        <TextBlock Text="{Binding IsFloatingMonitorVisible, StringFormat=Status: {0}}" 
-                                   VerticalAlignment="Center" Margin="10,0" Foreground="DarkBlue"/>
+                        <Button Content="📈 Show Monitor" Command="{Binding ShowFloatingMonitorCommand}" 
+                                Margin="5,2" Padding="8,3" ToolTip="Show floating register monitor window"/>
+                        <Button Content="📈 Hide Monitor" Command="{Binding HideFloatingMonitorCommand}" 
+                                Margin="5,2" Padding="8,3" ToolTip="Hide floating register monitor window"/>
+                        <Separator Margin="10, 0"/>
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
+                                 Style="{StaticResource SearchTextBox}" 
+                                 Width="180" Margin="5,0"
+                                 ToolTip="Search registers by name or address"/>
+                        <Button Content="🔄 Clear" 
+                                Margin="5,2" Padding="8,3" Command="{Binding ClearSearchCommand}" 
+                                ToolTip="Clear search text"/>
                     </StackPanel>
                 </Border>
 
                 <DataGrid Grid.Row="1" 
                           ItemsSource="{Binding RegisterItems}"
                           SelectedItem="{Binding SelectedRegister}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          GridLinesVisibility="All"
-                          HeadersVisibility="All">
+                          Style="{StaticResource SupervisorDataGridStyle}"
+                          RowStyle="{StaticResource SupervisorDataGridRowStyle}"
+                          ColumnHeaderStyle="{StaticResource SupervisorDataGridColumnHeaderStyle}"
+                          CellStyle="{StaticResource SupervisorDataGridCellStyle}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat=0x{0:X4}}" Width="80" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150" IsReadOnly="True"/>
@@ -202,8 +205,9 @@
                                               DigitalFormat="Hex"
                                               ByteLength="1"
                                               ReadOnly="{Binding CanWrite, Converter={StaticResource InverseBooleanConverter}}"
-                                              Width="80"
-                                              HorizontalAlignment="Center"/>
+                                              Width="80" Height="20"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -221,14 +225,12 @@
                                                 Command="{Binding DataContext.AddToFloatingMonitorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Width="30" Margin="1" Padding="3,1" FontSize="9"
-                                                ToolTip="Add to floating monitor"
-                                                Background="LightGreen"/>
+                                                ToolTip="Add to floating monitor"/>
                                         <Button Content="📊-" 
                                                 Command="{Binding DataContext.RemoveFromFloatingMonitorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Width="30" Margin="1" Padding="3,1" FontSize="9"
-                                                ToolTip="Remove from floating monitor"
-                                                Background="LightCoral"/>
+                                                ToolTip="Remove from floating monitor"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -242,17 +244,15 @@
         <!-- Bit Field Details -->
         <GroupBox Grid.Row="4" Header="Selected Register BitFields" Margin="10,5">
             <DataGrid ItemsSource="{Binding SelectedRegister.BitFieldItems}"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      GridLinesVisibility="All"
-                      HeadersVisibility="All"
-                      AlternatingRowBackground="#FFF8DC">
+                      Style="{StaticResource SupervisorDataGridStyle}"
+                      RowStyle="{StaticResource SupervisorDataGridRowStyle}"
+                      ColumnHeaderStyle="{StaticResource SupervisorDataGridColumnHeaderStyle}"
+                      CellStyle="{StaticResource SupervisorDataGridCellStyle}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="BitField"  Binding="{Binding Name}" Width="120"/>
-                    <DataGridTextColumn Header="Bit Range" Binding="{Binding BitRange}" Width="100"/>
-                    <DataGridTextColumn Header="Bit Width" Binding="{Binding BitWidth}" Width="100"/>
-                    <DataGridTextColumn Header="Value" Binding="{Binding CurrentValue}" Width="80"/>
+                    <DataGridTextColumn Header="BitField"  Binding="{Binding Name}" Width="120" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Bit Range" Binding="{Binding BitRange}" Width="100" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Bit Width" Binding="{Binding BitWidth}" Width="100" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Value" Binding="{Binding CurrentValue}" Width="80"  IsReadOnly="True"/>
 
                     <!-- Bit field control column - select different controls based on bit width -->
                     <DataGridTemplateColumn Header="Control" Width="120">
@@ -263,7 +263,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" IsReadOnly="True"/>
                 </DataGrid.Columns>
             </DataGrid>
         </GroupBox>

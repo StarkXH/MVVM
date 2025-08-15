@@ -21,6 +21,7 @@ namespace SupervisorApp.Models
         private readonly object _registerLock = new object(); // 添加锁
         private readonly Random _random;
         private System.Timers.Timer _simulationTimer;
+        private bool _simulationTimerDisposed = false; // 🔧 添加标志来跟踪timer状态
         private readonly CommunicationStatistics _statistics;
         private readonly CommunicationConfig _communicationConfig;
 
@@ -73,17 +74,33 @@ namespace SupervisorApp.Models
             get => _simulationTimer?.Enabled ?? false;
             set
             {
-                if (_simulationTimer != null)
+                // 🔧 添加线程安全和空检查
+                lock (_registerLock)
                 {
-                    if (value && ConnectionState == DeviceConnectionState.Ready)
+                    if (_simulationTimer != null && !_simulationTimerDisposed)
                     {
-                        _simulationTimer.Start();
-                        LogService.Instance.LogInfo("🎭 Simulation timer started");
+                        try
+                        {
+                            if (value && ConnectionState == DeviceConnectionState.Ready)
+                            {
+                                _simulationTimer.Start();
+                                LogService.Instance.LogInfo("🎭 Simulation timer started");
+                            }
+                            else
+                            {
+                                _simulationTimer.Stop();
+                                LogService.Instance.LogInfo("🎭 Simulation timer stopped");
+                            }
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            LogService.Instance.LogWarning("⚠️ Simulation timer already disposed");
+                            _simulationTimerDisposed = true;
+                        }
                     }
-                    else
+                    else if (value)
                     {
-                        _simulationTimer.Stop();
-                        LogService.Instance.LogInfo("🎭 Simulation timer stopped");
+                        LogService.Instance.LogWarning("⚠️ Cannot start simulation: timer is null or disposed");
                     }
                 }
             }
@@ -94,13 +111,29 @@ namespace SupervisorApp.Models
         /// </summary>
         public void StartSimulation()
         {
-            if (ConnectionState == DeviceConnectionState.Ready)
-            {
-                SimulationEnabled = true;
-            }
-            else
+            // 🔧 添加更完整的检查
+            if (ConnectionState != DeviceConnectionState.Ready)
             {
                 LogService.Instance.LogWarning("⚠️ Cannot start simulation: device not ready");
+                return;
+            }
+
+            lock (_registerLock)
+            {
+                if (_simulationTimer == null || _simulationTimerDisposed)
+                {
+                    LogService.Instance.LogWarning("⚠️ Simulation timer is null or disposed, recreating...");
+                    InitializeSimulationTimer();
+                }
+
+                try
+                {
+                    SimulationEnabled = true;
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.LogError($"❌ Failed to start simulation: {ex.Message}");
+                }
             }
         }
 
@@ -109,7 +142,17 @@ namespace SupervisorApp.Models
         /// </summary>
         public void StopSimulation()
         {
-            SimulationEnabled = false;
+            lock (_registerLock)
+            {
+                try
+                {
+                    SimulationEnabled = false;
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.LogError($"❌ Failed to stop simulation: {ex.Message}");
+                }
+            }
         }
 
         /// <summary>
@@ -118,16 +161,38 @@ namespace SupervisorApp.Models
         /// <param name="intervalMs">间隔时间（毫秒）</param>
         public void SetSimulationInterval(int intervalMs)
         {
-            if (_simulationTimer != null && intervalMs > 0)
+            if (intervalMs <= 0)
             {
-                bool wasEnabled = _simulationTimer.Enabled;
+                LogService.Instance.LogWarning("⚠️ Invalid simulation interval, must be > 0");
+                return;
+            }
 
-                _simulationTimer.Stop();
-                _simulationTimer.Interval = intervalMs;
-
-                if (wasEnabled && ConnectionState == DeviceConnectionState.Ready)
+            lock (_registerLock)
+            {
+                try
                 {
-                    _simulationTimer.Start();
+                    if (_simulationTimer != null && !_simulationTimerDisposed)
+                    {
+                        bool wasEnabled = _simulationTimer.Enabled;
+
+                        _simulationTimer.Stop();
+                        _simulationTimer.Interval = intervalMs;
+
+                        if (wasEnabled && ConnectionState == DeviceConnectionState.Ready)
+                        {
+                            _simulationTimer.Start();
+                        }
+
+                        LogService.Instance.LogInfo($"🎭 Simulation interval updated to {intervalMs}ms");
+                    }
+                    else
+                    {
+                        LogService.Instance.LogWarning("⚠️ Cannot set interval: timer is null or disposed");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.LogError($"❌ Failed to set simulation interval: {ex.Message}");
                 }
             }
         }
@@ -194,6 +259,7 @@ namespace SupervisorApp.Models
                     throw new InvalidOperationException("Device initialization failed.");
                 }
 
+                SetupTestScenarios(); // 连接设备时设置模拟值
                 ConnectionState = DeviceConnectionState.Ready;
                 // _simulationTimer?.Start();
                 _statistics.Reset();
@@ -553,12 +619,46 @@ namespace SupervisorApp.Models
             return TestDevice100RegisterMaps.GetRegisterMaps();
         }
 
+        /// <summary>
+        /// 更新BitField的值映射
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="position"></param>
+        /// <param name="mappings"></param>
+        public void UpdateValueMappings(uint address, int position, Dictionary<int, string> mappings)
+        {
+            try
+            {
+                var result = GetRegisterMaps();
+                foreach (var map in result)
+                {
+                    if (map.Address == address)
+                    {
+                        foreach (var bitField in map.BitFields)
+                        {
+                            if (bitField.BitPosition == position)
+                            {
+                                bitField.ValueMappings = mappings;
+                                LogService.Instance.LogInfo($"📝 Updated value mappings for register 0x{address:X4} at bit {position}");
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error updating value mappings for register 0x{address:X4} at bit {position}: {ex.Message}");
+            }
+            
+        }
+
         #endregion
 
         #region 测试控制方法
 
         /// <summary>
-        /// 启用/禁用错误模拟
+        /// 启用/禁用 错误模拟
         /// </summary>
         public void SetErrorSimulation(bool enabled, double errorRate = 0.05)
         {
@@ -734,7 +834,7 @@ namespace SupervisorApp.Models
             }
 
             // 设置特定的测试值
-            SetupTestScenarios();
+            // SetupTestScenarios();
         }
 
         private void SetupTestScenarios()
@@ -759,16 +859,39 @@ namespace SupervisorApp.Models
 
         private void InitializeSimulationTimer()
         {
-            _simulationTimer = new System.Timers.Timer(2000); // 每2秒更新一次
-            _simulationTimer.Elapsed += OnSimulationTick;
-            _simulationTimer.AutoReset = true;
+            // 🔧 释放旧的timer
+            lock (_registerLock)
+            {
+                try
+                {
+                    _simulationTimer = new System.Timers.Timer(2000); // 每2秒更新一次
+                    _simulationTimer.Elapsed += OnSimulationTick;
+                    _simulationTimer.AutoReset = true;
+                    _simulationTimerDisposed = false; // 🔧 重置标志
+                    LogService.Instance.LogInfo("🎭 Simulation timer initialized");
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.LogError($"❌ Failed to initialize simulation timer: {ex.Message}");
+                    _simulationTimerDisposed = true;
+                }
+            }
         }
 
         private void OnSimulationTick(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (ConnectionState != DeviceConnectionState.Ready) return;
+            // 🔧 添加安全检查
+            try
+            {
+                if (ConnectionState != DeviceConnectionState.Ready) 
+                    return;
 
-            SimulateDeviceChanges();
+                SimulateDeviceChanges();
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error in simulation tick: {ex.Message}");
+            }
         }
 
         private void SimulateDeviceChanges()
@@ -827,9 +950,35 @@ namespace SupervisorApp.Models
 
         public void Dispose()
         {
-            _simulationTimer?.Stop();
-            _simulationTimer?.Dispose();
-            ConnectionState = DeviceConnectionState.Uninitialized;
+            // 🔧 确保线程安全的dispose
+            lock (_registerLock)
+            {
+                try
+                {
+                    if (_simulationTimer != null && !_simulationTimerDisposed)
+                    {
+                        _simulationTimer.Stop();
+                        _simulationTimer.Dispose();
+                        _simulationTimerDisposed = true; // 🔧 设置标志
+                        _simulationTimer = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.LogWarning($"⚠️ Error disposing simulation timer: {ex.Message}");
+                }
+
+                try
+                {
+                    ConnectionState = DeviceConnectionState.Uninitialized;
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.LogWarning($"⚠️ Error setting connection state: {ex.Message}");
+                }
+            }
+
+            LogService.Instance.LogInfo("🧹 TestDevice100 disposed");
         }
 
         #endregion

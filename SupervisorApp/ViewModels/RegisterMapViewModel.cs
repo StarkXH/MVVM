@@ -36,13 +36,18 @@ namespace SupervisorApp.ViewModels
         private System.Timers.Timer _timeUpdateTimer;
         private DateTime _currentTime;
         private FloatingRegisterMonitorView _floatingMonitorView;
+        private string _searchText = string.Empty;
+        private ObservableCollection<RegisterItemViewModel> _allRegisterItems;
+        private ObservableCollection<RegisterItemViewModel> _filteredRegisterItems;
 
         #endregion
 
         public RegisterMapViewModel()
         {
             DisplayName = "Register Monitor";
-            RegisterItems = new ObservableCollection<RegisterItemViewModel>();
+            _allRegisterItems = new ObservableCollection<RegisterItemViewModel>();
+            _filteredRegisterItems = new ObservableCollection<RegisterItemViewModel>();
+            RegisterItems = _filteredRegisterItems;
 
             InitializeCommands();
             InitalizeTimeUpdateTimer();
@@ -107,6 +112,19 @@ namespace SupervisorApp.ViewModels
         /// Register items collection
         /// </summary>
         public ObservableCollection<RegisterItemViewModel> RegisterItems { get; }
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (Set(ref _searchText, value))
+                {
+                    // 🟢 过滤寄存器列表
+                    ApplySearchFilter();
+                }
+            }
+        }
 
         /// <summary>
         /// Selected register
@@ -248,7 +266,7 @@ namespace SupervisorApp.ViewModels
         public RelayCommand<RegisterItemViewModel> RemoveFromFloatingMonitorCommand { get; private set; }
         public RelayCommand ShowFloatingMonitorCommand { get; private set; }
         public RelayCommand HideFloatingMonitorCommand { get; private set; }
-        public RelayCommand ToggleFloatingMonitorCommand { get; private set; }
+        public RelayCommand ClearSearchCommand { get; private set; }
 
         private void InitializeCommands()
         {
@@ -305,9 +323,8 @@ namespace SupervisorApp.ViewModels
                 HideFloatingMonitor,
                 () => IsFloatingMonitorVisible);
 
-            ToggleFloatingMonitorCommand = new RelayCommand(
-                ToggleFloatingMonitor);
-
+            ClearSearchCommand = new RelayCommand(
+                ClearSearch);
         }
 
         private void UpdateAllCommandStates()
@@ -387,12 +404,14 @@ namespace SupervisorApp.ViewModels
         /// </summary>
         public override async Task OnLoadedAsync()
         {
-            await ExecuteAsync(async () =>
+            if (CurrentDevice != null)
             {
-                // Load test device automatically
-                await LoadTestAsync();
-
-            }, "Initializing device...");
+                await ExecuteAsync(async () => await LoadTestAsync(), "Initializing device...");
+            }
+            else
+            {
+                LogService.Instance.LogInfo("No device assigned yet, skipping test");
+            }
         }
 
         /// <summary>
@@ -404,7 +423,7 @@ namespace SupervisorApp.ViewModels
             {
                 // 🟢 取消订阅事件，避免内存泄漏
                 _floatingMonitorView.ViewModel.MonitoredRegisterChanged -= OnFloatingMonitorRegisterChanged;
-
+                _floatingMonitorView.VisibilityChanged -= OnFloatingMonitorVisibilityChanged;
                 _floatingMonitorView.Close();
                 _floatingMonitorView = null;
             }
@@ -432,19 +451,32 @@ namespace SupervisorApp.ViewModels
         /// </summary>
         private void UpdateDeviceSimulation()
         {
-            if (CurrentDevice is TestDevice100 testDevice)
+            try
             {
-                if (SimulationEnabled && IsConnected)
+                if (CurrentDevice is TestDevice100 testDevice)
                 {
-                    testDevice.StartSimulation();
-                }
-                else
-                {
-                    testDevice.StopSimulation();
-                }
+                    if (SimulationEnabled && IsConnected)
+                    {
+                        LogService.Instance.LogInfo("🎭 Starting device simulation...");
+                        testDevice.StartSimulation();
+                    }
+                    else
+                    {
+                        LogService.Instance.LogInfo("🎭 Stopping device simulation...");
+                        testDevice.StopSimulation();
+                    }
 
-                // 通知状态变化
-                RaisePropertyChanged(nameof(SimulationStatus));
+                    // 通知状态变化
+                    RaisePropertyChanged(nameof(SimulationStatus));
+                }
+                else if (SimulationEnabled)
+                {
+                    LogService.Instance.LogWarning("⚠️ Cannot update simulation: device is not TestDevice100");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error updating device simulation: {ex.Message}");
             }
         }
 
@@ -453,12 +485,22 @@ namespace SupervisorApp.ViewModels
         /// </summary>
         private void UpdateDeviceSimulationInterval()
         {
-            if (CurrentDevice is TestDevice100 testDevice)
+            try
             {
-                testDevice.SetSimulationInterval(SimulationInterval);
-
-                LogService.Instance.LogInfo($"🎭 Simulation interval updated to {SimulationInterval}ms");
-                RaisePropertyChanged(nameof(SimulationStatus));
+                if (CurrentDevice is TestDevice100 testDevice)
+                {
+                    testDevice.SetSimulationInterval(SimulationInterval);
+                    LogService.Instance.LogInfo($"🎭 Simulation interval updated to {SimulationInterval}ms");
+                    RaisePropertyChanged(nameof(SimulationStatus));
+                }
+                else
+                {
+                    LogService.Instance.LogWarning("⚠️ Cannot set interval: device is not TestDevice100");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error updating simulation interval: {ex.Message}");
             }
         }
 
@@ -467,14 +509,28 @@ namespace SupervisorApp.ViewModels
         /// </summary>
         public void StartSimulation()
         {
-            if (IsConnected)
+            try
             {
+                if (!IsConnected)
+                {
+                    LogService.Instance.LogWarning("⚠️ Cannot start simulation: device not connected");
+                    return;
+                }
+
+                if (CurrentDevice == null)
+                {
+                    LogService.Instance.LogWarning("⚠️ Cannot start simulation: no device assigned");
+                    return;
+                }
+
+                LogService.Instance.LogInfo("🎭 User requested to start simulation");
                 SimulationEnabled = true;
                 UpdateAllCommandStates();
             }
-            else
+            catch (Exception ex)
             {
-                LogService.Instance.LogWarning("⚠️ Cannot start simulation: device not connected");
+                LogService.Instance.LogError($"❌ Error starting simulation: {ex.Message}");
+                HandleError(ex);
             }
         }
 
@@ -483,8 +539,17 @@ namespace SupervisorApp.ViewModels
         /// </summary>
         public void StopSimulation()
         {
-            SimulationEnabled = false;
-            UpdateAllCommandStates();
+            try
+            {
+                LogService.Instance.LogInfo("🎭 User requested to stop simulation");
+                SimulationEnabled = false;
+                UpdateAllCommandStates();
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error stopping simulation: {ex.Message}");
+                HandleError(ex);
+            }
         }
 
         #endregion
@@ -493,7 +558,14 @@ namespace SupervisorApp.ViewModels
 
         private async Task LoadTestAsync()
         {
-            await DeviceTestHelper.RunComprehensiveTest(CurrentDevice);
+            if (CurrentDevice != null)
+            {
+                await DeviceTestHelper.RunComprehensiveTest(CurrentDevice);
+            }
+            else
+            {
+                LogService.Instance.LogWarning("LoadTestAsync called but CurrentDevice is null");
+            }
         }
 
         private void UpdateDeviceInfo()
@@ -524,8 +596,9 @@ namespace SupervisorApp.ViewModels
             {
                 // 🟢 更换设备时先取消旧事件订阅
                 UnsubscribeFromDeviceEvents();
+                _allRegisterItems.Clear();
+                _filteredRegisterItems.Clear();
 
-                RegisterItems.Clear();
 
                 if (CurrentDevice != null)
                 {
@@ -533,10 +606,11 @@ namespace SupervisorApp.ViewModels
                     foreach (var registerMap in registerMaps.Take(20))
                     {
                         var registerVM = new RegisterItemViewModel(registerMap, CurrentDevice);
-                        RegisterItems.Add(registerVM);
+                        _allRegisterItems.Add(registerVM);
                     }
 
-                    LogService.Instance.LogInfo($"Loaded {RegisterItems.Count} registers from device");
+                    ApplySearchFilter();
+                    LogService.Instance.LogInfo($"Loaded {_allRegisterItems.Count} registers from device");
                 }
 
                 await Task.CompletedTask; // Ensure async method
@@ -574,20 +648,35 @@ namespace SupervisorApp.ViewModels
         {
             try
             {
+                LogService.Instance.LogInfo("🔌 Disconnecting device...");
+
                 // 🟢 断开连接前先停止设备模拟
                 if (CurrentDevice is TestDevice100 testDevice)
                 {
+                    LogService.Instance.LogInfo("🎭 Stopping simulation before disconnect...");
                     testDevice.StopSimulation();
                 }
+
                 // 🟢 先取消事件订阅
                 UnsubscribeFromDeviceEvents();
-                CurrentDevice?.Dispose();
-                IsConnected = false; // 🟢 手动设置为断开状态（因为 Dispose 后事件不会触发）
-                LogService.Instance.LogInfo("Device disconnected");
+                
+                // 🟢 释放设备资源
+                if (CurrentDevice != null)
+                {
+                    CurrentDevice.Dispose();
+                    CurrentDevice = null;
+                }
+                
+                // 🟢 手动设置为断开状态（因为 Dispose 后事件不会触发）
+                IsConnected = false;
+                SimulationEnabled = false; // 确保模拟状态也被重置
+                
+                LogService.Instance.LogInfo("✅ Device disconnected successfully");
                 ClearError(); // Clear connection-related errors
             }
             catch (Exception ex)
             {
+                LogService.Instance.LogError($"❌ Error during device disconnect: {ex.Message}");
                 HandleError(ex);
             }
             finally
@@ -892,10 +981,27 @@ namespace SupervisorApp.ViewModels
 
         private void InitalizeTimeUpdateTimer()
         {
-            _timeUpdateTimer = new System.Timers.Timer(1000); // 每秒更新一次
-            _timeUpdateTimer.Elapsed += OnTimeUpdateTick;
-            _timeUpdateTimer.AutoReset = true; // 自动重置
-            _timeUpdateTimer.Enabled = true;
+            try
+            {
+                // 🔧 先停止和释放旧的timer
+                if (_timeUpdateTimer != null)
+                {
+                    _timeUpdateTimer.Stop();
+                    _timeUpdateTimer.Dispose();
+                    _timeUpdateTimer = null;
+                }
+
+                _timeUpdateTimer = new System.Timers.Timer(1000); // 每秒更新一次
+                _timeUpdateTimer.Elapsed += OnTimeUpdateTick;
+                _timeUpdateTimer.AutoReset = true; // 自动重置
+                _timeUpdateTimer.Enabled = true;
+                
+                LogService.Instance.LogInfo("🕐 Time update timer initialized");
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Failed to initialize time update timer: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -912,7 +1018,14 @@ namespace SupervisorApp.ViewModels
                 {
                     Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
                     {
-                        Time = newTime;
+                        try
+                        {
+                            Time = newTime;
+                        }
+                        catch (Exception ex)
+                        {
+                            LogService.Instance.LogError($"❌ Error updating time on UI thread: {ex.Message}");
+                        }
                     }));
                 }
             }
@@ -924,11 +1037,19 @@ namespace SupervisorApp.ViewModels
 
         private void StopTimeUpdateTimer()
         {
-            if (_timeUpdateTimer != null)
+            try
             {
-                _timeUpdateTimer.Stop();
-                _timeUpdateTimer.Dispose();
-                _timeUpdateTimer = null;
+                if (_timeUpdateTimer != null)
+                {
+                    _timeUpdateTimer.Stop();
+                    _timeUpdateTimer.Dispose();
+                    _timeUpdateTimer = null;
+                    LogService.Instance.LogInfo("🕐 Time update timer stopped and disposed");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error stopping time update timer: {ex.Message}");
             }
         }
 
@@ -948,6 +1069,7 @@ namespace SupervisorApp.ViewModels
 
                 // 🟢 订阅浮动监视器的变化事件
                 _floatingMonitorView.ViewModel.MonitoredRegisterChanged += OnFloatingMonitorRegisterChanged;
+                _floatingMonitorView.VisibilityChanged += OnFloatingMonitorVisibilityChanged;
 
                 LogService.Instance.LogInfo("🪟 Floating monitor window created");
             }
@@ -972,6 +1094,17 @@ namespace SupervisorApp.ViewModels
             {
                 LogService.Instance.LogError($"❌ Error handling floating monitor register change: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 浮动监视器窗口可见性变化时触发
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnFloatingMonitorVisibilityChanged(object sender, EventArgs e)
+        {
+            RaisePropertyChanged(nameof(IsFloatingMonitorVisible));
+            UpdateFloatingMonitorCommands();
         }
 
         /// <summary>
@@ -1073,6 +1206,42 @@ namespace SupervisorApp.ViewModels
 
             // Fallback to base class generic handling
             return base.GetUserFriendlyErrorMessage(exception);
+        }
+
+        private void ApplySearchFilter()
+        {
+            _filteredRegisterItems.Clear();
+
+            if (string.IsNullOrEmpty(SearchText))
+            {
+                // 如果没有搜索文本，显示所有寄存器
+                foreach (var item in _allRegisterItems)
+                {
+                    _filteredRegisterItems.Add(item);
+                }
+            }
+            else
+            {
+                // 根据搜索文本过滤寄存器
+                var searchLower = SearchText.ToLower();
+                foreach (var item in _allRegisterItems)
+                {
+                    if (item.Name.ToLower().Contains(searchLower) ||
+                        item.Description.ToLower().Contains(searchLower) ||
+                        item.Address.ToString("X4").Contains(searchLower))
+                    {
+                        _filteredRegisterItems.Add(item);
+                    }
+                }
+            }
+
+            RaisePropertyChanged(nameof(RegisterItems));
+        }
+
+        private void ClearSearch()
+        {
+            SearchText = string.Empty; // 清空搜索文本
+            ApplySearchFilter(); // 重新应用过滤
         }
 
         #endregion

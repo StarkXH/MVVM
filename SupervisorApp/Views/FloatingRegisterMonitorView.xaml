@@ -16,7 +16,8 @@
         ResizeMode="CanResize"
         Topmost="{Binding IsAlwaysOnTop}"
         Opacity="{Binding WindowOpacity}"
-        ShowInTaskbar="True">
+        ShowInTaskbar="True"
+        Icon="/Resources/SY16a32a48a256.ico">
     <d:Window.DataContext>
         <vm:FloatingRegisterMonitorViewModel/>
     </d:Window.DataContext>
@@ -55,24 +56,16 @@
                 Margin="2,0" Padding="5,2" ToolTip="Increase opacity"/>
                 <Button Content="➖" Command="{Binding DecreaseOpacityCommand}" 
                 Margin="2,0" Padding="5,2" ToolTip="Decrease opacity"/>
-
-                <Separator Margin="10,0"/>
-
-                <CheckBox Content="📌 Always on Top" IsChecked="{Binding IsAlwaysOnTop}" 
-                  VerticalAlignment="Center" Margin="5,0"/>
             </StackPanel>
         </Border>
 
         <!-- 寄存器监控列表 -->
         <DataGrid Grid.Row="1" 
                   ItemsSource="{Binding MonitoredRegisters}"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  GridLinesVisibility="All"
-                  HeadersVisibility="All"
-                  AlternatingRowBackground="#F0F8FF"
-                  Margin="5">
+                  Style="{StaticResource SupervisorDataGridStyle}"
+                  RowStyle="{StaticResource SupervisorDataGridRowStyle}"
+                  ColumnHeaderStyle="{StaticResource SupervisorDataGridColumnHeaderStyle}"
+                  CellStyle="{StaticResource SupervisorDataGridCellStyle}">
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat=0x{0:X4}}" 
@@ -103,12 +96,11 @@
                 <DataGridTemplateColumn Header="Action" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="❌" 
+                            <Button Content="📊-" 
                             Command="{Binding DataContext.RemoveRegisterCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             CommandParameter="{Binding}"
-                            Width="30" Height="25"
-                            ToolTip="Remove from monitor"
-                            Background="LightCoral"/>
+                            Width="30" Margin="1" Padding="3,1" FontSize="9"
+                            ToolTip="Remove from monitor"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

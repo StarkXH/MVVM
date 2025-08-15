@@ -5,7 +5,7 @@
     <!--TextBox-->
     <Style x:Key="SearchTextBox" TargetType="TextBox">
         <Setter Property="Width" Value="200"/>
-        <Setter Property="Height" Value="30"/>
+        <Setter Property="Height" Value="25"/>
         <Setter Property="Foreground" Value="Black"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Template">

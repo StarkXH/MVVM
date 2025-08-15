@@ -134,6 +134,7 @@ namespace SupervisorApp.ViewModels
             ReadCommand = new AsyncRelayCommand(
                 async () => await ReadValueAsync(), 
                 () => CanRead);
+
         }
 
         #endregion

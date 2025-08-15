@@ -12,7 +12,6 @@ namespace SupervisorApp.ViewModels
     {
         #region Private Fields
 
-        private bool _isAlwaysOnTop = true;
         private double _windowOpacity = 0.9;
         private string _windowTitle = "Register Monitor";
 
