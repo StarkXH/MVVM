@@ -112,7 +112,7 @@ namespace SupervisorApp.Models
         public void StartSimulation()
         {
             // 🔧 添加更完整的检查
-            if (ConnectionState != DeviceConnectionState.Ready)
+            if (ConnectionState != DeviceConnectionState.Ready)   
             {
                 LogService.Instance.LogWarning("⚠️ Cannot start simulation: device not ready");
                 return;

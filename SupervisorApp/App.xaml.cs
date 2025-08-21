@@ -12,6 +12,8 @@ namespace SupervisorApp
     /// </summary>
     public partial class App : Application
     {
+        private SplashScreenWindow _splashScreen;
+
         private void OnStartup(object sender, StartupEventArgs e)
         {
             // 全局异常处理
@@ -23,8 +25,8 @@ namespace SupervisorApp
 
             try
             {
-                // 应用程序启动流程
-                StartApplicationFlow();
+                // 🌟 显示启动画面
+                ShowSplashScreen();
             }
             catch (Exception ex)
             {
@@ -35,14 +37,112 @@ namespace SupervisorApp
         }
 
         /// <summary>
+        /// 显示启动画面
+        /// </summary>
+        private void ShowSplashScreen()
+        {
+            LogService.Instance.LogInfo("🌟 Showing splash screen...");
+
+            // 🔧 设置应用程序关闭模式为显式关闭，防止自动退出
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            // 创建并显示启动画面
+            _splashScreen = new SplashScreenWindow();
+            
+            // 订阅启动画面事件
+            _splashScreen.ContinueRequested += OnSplashContinueRequested;
+            _splashScreen.ExitRequested += OnSplashExitRequested;
+            _splashScreen.SettingsRequested += OnSplashSettingsRequested;
+
+            // 显示启动画面
+            _splashScreen.Show();
+            
+            LogService.Instance.LogInfo("✨ Splash screen displayed successfully");
+        }
+
+       
+        /// <summary>
+        /// 处理启动画面的继续请求
+        /// </summary>
+        private void OnSplashContinueRequested(object sender, EventArgs e)
+        {
+            try
+            {
+                LogService.Instance.LogInfo("🚀 Continuing to device selection...");
+
+                // 隐藏启动画面
+                _splashScreen?.Hide();
+
+                // 开始应用程序主流程
+                StartApplicationFlow();
+            }
+            catch (Exception ex)
+            {
+                LogService.Instance.LogError($"❌ Error continuing from splash screen: {ex.Message}");
+                MessageBox.Show($"继续启动时发生错误: {ex.Message}", "启动错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown();
+            }
+            finally
+            {
+                // 清理启动画面
+                CleanupSplashScreen();
+            }
+        }
+
+        /// <summary>
+        /// 处理启动画面的退出请求
+        /// </summary>
+        private void OnSplashExitRequested(object sender, EventArgs e)
+        {
+            LogService.Instance.LogInfo("❌ User requested to exit from splash screen");
+            CleanupSplashScreen();
+            Shutdown();
+        }
+
+        /// <summary>
+        /// 处理启动画面的设置请求
+        /// </summary>
+        private void OnSplashSettingsRequested(object sender, EventArgs e)
+        {
+            LogService.Instance.LogInfo("⚙️ User requested settings from splash screen");
+            
+            // 这里可以添加设置窗口的逻辑
+            MessageBox.Show("设置功能正在开发中...", "设置", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        /// <summary>
+        /// 清理启动画面资源
+        /// </summary>
+        private void CleanupSplashScreen()
+        {
+            if (_splashScreen != null)
+            {
+                try
+                {
+                    // 取消事件订阅
+                    _splashScreen.ContinueRequested -= OnSplashContinueRequested;
+                    _splashScreen.ExitRequested -= OnSplashExitRequested;
+                    _splashScreen.SettingsRequested -= OnSplashSettingsRequested;
+
+                    // 关闭窗口
+                    _splashScreen.Close();
+                    _splashScreen = null;
+
+                    LogService.Instance.LogInfo("🧹 Splash screen cleaned up");
+                }
+                catch (Exception ex)
+                {
+                    LogService.Instance.LogError($"❌ Error cleaning up splash screen: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
         /// 应用程序启动流程
         /// </summary>
         private void StartApplicationFlow()
         {
             LogService.Instance.LogInfo("📋 Starting device selection process...");
-
-            // 🔧 设置应用程序关闭模式为显式关闭，防止自动退出
-            ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             // 步骤1: 显示设备选择对话框
             var selectedDevice = DeviceSelectionWindow.ShowDeviceSelectionDialog();
@@ -112,6 +212,10 @@ namespace SupervisorApp
         {
             LogService.Instance.LogInfo("🚪 SupervisorApp is closing...");
             LogService.Instance.LogInfo($"🕐 Session duration: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            
+            // 确保清理启动画面
+            CleanupSplashScreen();
+            
             base.OnExit(e);
         }
     }

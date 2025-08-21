@@ -27,7 +27,7 @@
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>\\AE-GUI-NAS\Share\</InstallUrl>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -176,6 +176,7 @@
     <Compile Include="Helpers\DeviceTestHelper.cs" />
     <Compile Include="Models\TestModels.cs" />
     <Compile Include="Models\VA79ARegisterMaps.cs" />
+    <Compile Include="Test\SplashScreenTester.cs" />
     <Compile Include="UserControl\CnvLib.cs" />
     <Compile Include="UserControl\DigitalFormatTextBox.cs" />
     <Compile Include="ViewModels\BitFieldItemViewModel.cs" />
@@ -192,6 +193,9 @@
     </Compile>
     <Compile Include="Views\RegisterMapView.xaml.cs">
       <DependentUpon>RegisterMapView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SplashScreenWindow.xaml.cs">
+      <DependentUpon>SplashScreenWindow.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -213,13 +217,13 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="Docs\LogTextBox自动滚动解决方案.md" />
+    <None Include="Docs\SplashScreenDesign.md" />
     <None Include="Docs\代码优化报告.md" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="SupervisorApp_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -288,6 +292,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\SplashScreenWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\SY16a32a48a256.ico" />
@@ -303,6 +310,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\SY117x32.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

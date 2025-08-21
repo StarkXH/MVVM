@@ -64,9 +64,6 @@ namespace SupervisorApp
             {
                 LogService.Instance.LogError($"❌ Error during resource cleanup: {ex.Message}");
             }
-            
-            // 🔧 移除Environment.Exit(0)，让WPF正常处理窗口关闭
-            // Environment.Exit(0); // 这会强制终止进程，不建议使用
         }
 
         private void LoadTestDeviceToRegisterMap()
