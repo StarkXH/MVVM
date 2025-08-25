@@ -1,0 +1,213 @@
+﻿<Window x:Class="SplashDemo.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SplashDemo"
+        mc:Ignorable="d"
+        Title="加载中..." 
+        Width="800" Height="500"
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        Opacity="0" d:Opacity="100">
+    
+    <Window.Resources>
+        <!-- 窗口淡入动画 -->
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                           From="0" To="1" Duration="0:0:0.8"
+                           AccelerationRatio="0.3"/>
+        </Storyboard>
+        
+        <!-- 窗口淡出动画 -->
+        <Storyboard x:Key="FadeOutAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                           From="1" To="0" Duration="0:0:0.5"
+                           DecelerationRatio="0.3"/>
+        </Storyboard>
+        
+        <!-- Logo脉动动画 -->
+        <Storyboard x:Key="LogoPulseAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="LogoScale"
+                           Storyboard.TargetProperty="ScaleX"
+                           From="1.0" To="1.05" Duration="0:0:1.5"
+                           AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetName="LogoScale"
+                           Storyboard.TargetProperty="ScaleY"
+                           From="1.0" To="1.05" Duration="0:0:1.5"
+                           AutoReverse="True"/>
+        </Storyboard>
+        
+        <!-- 进度条动画样式 -->
+        <Style x:Key="AnimatedProgressBar" TargetType="ProgressBar">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+                            <Grid>
+                                <Border Name="PART_Track" Background="Transparent"/>
+                                <Border Name="PART_Indicator" 
+                                       Background="{TemplateBinding Foreground}"
+                                       HorizontalAlignment="Left"
+                                       CornerRadius="3">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#FF007ACC" BlurRadius="5" Opacity="0.6"/>
+                                    </Border.Effect>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard Storyboard="{StaticResource FadeInAnimation}"/>
+            <BeginStoryboard Storyboard="{StaticResource LogoPulseAnimation}"/>
+        </EventTrigger>
+    </Window.Triggers>
+
+    <Border CornerRadius="10" BorderBrush="#FF007ACC" BorderThickness="2">
+        <Border.Effect>
+            <DropShadowEffect Color="#33000000" BlurRadius="15" ShadowDepth="5" Opacity="0.3"/>
+        </Border.Effect>
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#FF005CB9" Offset="0.0"/>
+                <GradientStop Color="#FF007ACC" Offset="0.3"/>
+                <GradientStop Color="#FFE8F4FD" Offset="0.7"/>
+                <GradientStop Color="#FFFFFFFF" Offset="1.0"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 应用程序图标和名称 -->
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <!-- 艺术字Logo替代图标 -->
+                <Viewbox Height="80" Width="130">
+                    <Border Background="#FF005CB9" CornerRadius="8" Padding="15,10"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Border.RenderTransform>
+                            <ScaleTransform x:Name="LogoScale" ScaleX="1" ScaleY="1"/>
+                        </Border.RenderTransform>
+                        <Border.Effect>
+                            <DropShadowEffect Color="#33000000" BlurRadius="8" ShadowDepth="3" Opacity="0.5"/>
+                        </Border.Effect>
+                        <Grid>
+                            <TextBlock Text="SILERGY" 
+                                       FontFamily="Arial Black" 
+                                       FontSize="48" 
+                                       FontWeight="Black"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="#FF007ACC" BlurRadius="2" ShadowDepth="2" Opacity="0.8"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+                            <!-- 装饰性线条 -->
+                            <Rectangle Height="2" 
+                                       Fill="#FF007ACC" 
+                                       VerticalAlignment="Bottom" 
+                                       Margin="5,0,5,8"
+                                       Opacity="0.8"/>
+                            <Rectangle Height="1" 
+                                       Fill="White" 
+                                       VerticalAlignment="Top" 
+                                       Margin="5,8,5,0"
+                                       Opacity="0.6"/>
+                        </Grid>
+                    </Border>
+                </Viewbox>
+
+                <TextBlock Text="Evaluation Kit GUI" 
+                           Foreground="White" 
+                           FontSize="28" 
+                           FontWeight="Bold" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,15,0,0">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="#FF005CB9" BlurRadius="3" ShadowDepth="1" Opacity="0.8"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+                <TextBlock Text="Silergy Evaluation Platform" 
+                           Foreground="White" 
+                           FontSize="20" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,5,0,0"
+                           FontWeight="SemiBold">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="#FF005CB9" BlurRadius="2" ShadowDepth="1" Opacity="0.6"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+                <TextBlock Text="Version 1.0.0" 
+                           FontSize="12" 
+                           Foreground="#FF606060" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <!-- 加载进度区域 -->
+            <StackPanel Grid.Row="1" Margin="40,20,40,40">
+                <!-- 进度条 -->
+                <ProgressBar x:Name="ProgressBar" 
+                            Height="8" 
+                            Background="#33FFFFFF" 
+                            Foreground="#FF007ACC" 
+                            BorderThickness="0"
+                            Style="{StaticResource AnimatedProgressBar}"
+                            IsIndeterminate="True"/>
+
+                <!-- 加载状态文本 -->
+                <TextBlock x:Name="StatusText" 
+                          Text="正在初始化..." 
+                          FontSize="12" 
+                          Foreground="#FF606060" 
+                          HorizontalAlignment="Center" 
+                          Margin="0,10,0,0"/>
+                
+                <!-- 加载点动画 -->
+                <TextBlock x:Name="LoadingDots" 
+                          Text="..."
+                          FontSize="12" 
+                          Foreground="#FF606060" 
+                          HorizontalAlignment="Center" 
+                          Margin="0,2,0,0">
+                    <TextBlock.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <StringAnimationUsingKeyFrames Storyboard.TargetProperty="Text" Duration="0:0:1.5">
+                                        <DiscreteStringKeyFrame Value="" KeyTime="0:0:0"/>
+                                        <DiscreteStringKeyFrame Value="." KeyTime="0:0:0.5"/>
+                                        <DiscreteStringKeyFrame Value=".." KeyTime="0:0:1"/>
+                                        <DiscreteStringKeyFrame Value="..." KeyTime="0:0:1.5"/>
+                                    </StringAnimationUsingKeyFrames>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </TextBlock.Triggers>
+                </TextBlock>
+            </StackPanel>
+
+            <!-- 版权信息 -->
+            <TextBlock Grid.Row="2" Text="© 2025 Silergy Corp. All Rights Reserved." 
+                       Foreground="#FF606060" 
+                       HorizontalAlignment="Center" 
+                       Margin="0,10,0,15"/>
+        </Grid>
+    </Border>
+</Window>
